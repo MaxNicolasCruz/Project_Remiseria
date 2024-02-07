@@ -1,0 +1,45 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+	.card {
+		@apply bg-slate-300 rounded shadow-lg w-[90%] mb-5 hover:border-solid hover:border-b-2 hover:border-black max-w-[480px] lg:max-w-none;
+	}
+	.slideMenu {
+		@apply flex flex-col bg-gray-300 shadow-sm mb-2 shadow-slate-950 pt-2 pb-5 absolute -top-[50px] -z-10 lg:h-[90%] lg:w-[200px];
+	}
+	.container-form {
+		@apply shadow rounded mr-auto ml-auto p-3 mt-2 w-[90%] bg-[#2e2e2e] text-white sm:max-w-[600px] md:max-w-[900px];
+	}
+	.msg-error {
+		@apply text-red-600 block mt-1 font-semibold;
+	}
+	.select-style {
+		@apply h-7 text-black outline-none rounded pl-1 pr-1;
+	}
+	.conteinerCard-profile {
+		@apply flex flex-col items-center bg-slate-300 m-5 rounded-lg;
+	}
+}
+
+@layer utilities {
+	.smm {
+		@media (min-width: 400px) {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+		}
+	}
+	.transition-5ms {
+		transition: all 0.4s;
+	}
+	.shadow-common {
+		box-shadow: 0px 0px 20px;
+	}
+	.transform-rombo {
+		transform: rotate(50deg) skew(10deg) ;
+		
+		@media (min-width: 600px) {
+			transform: rotate(50deg) skew(10deg) scale(1.14) ;
+		}
+	}
+}
