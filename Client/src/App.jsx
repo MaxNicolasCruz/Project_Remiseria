@@ -7,22 +7,27 @@ import { AuthProvider } from "./context/AuthContext";
 import ProtectedRoute from "./ProtectedRoute";
 import Profile from "./pages/Profile";
 import Footer from "./components/common/Footer";
-
+import User from "./pages/User";
 
 function App() {
 	return (
 		<AuthProvider>
 			<BrowserRouter>
-				<Header />
-				<Routes>
-					<Route path="/" element={<Home />} />
-					<Route path="/register" element={<Register />} />
-					<Route path="/login" element={<Login />} />
-					<Route element={<ProtectedRoute />}>
-						<Route path="/profile" element={<Profile />} />
-					</Route>
-				</Routes>
-				<Footer/>
+				<div className="flex flex-col min-h-screen">
+					<Header />
+					<div className="flex-grow">
+						<Routes>
+							<Route path="/" element={<Home />} />
+							<Route path="/register" element={<Register />} />
+							<Route path="/login" element={<Login />} />
+							<Route element={<ProtectedRoute />}>
+								<Route path="/profile" element={<Profile />} />
+								<Route path="/user/:id/:name" element={<User />} />
+							</Route>
+						</Routes>
+					</div>
+					<Footer />
+				</div>
 			</BrowserRouter>
 		</AuthProvider>
 	);

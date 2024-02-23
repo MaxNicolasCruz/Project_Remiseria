@@ -16,17 +16,18 @@ function Home() {
 		const getUsers = async () => {
 			try {
 				const res = await getAllServiceRequest();
-				setUsers(res.data.users);
+				console.log(res);
+				setUsers(res.data.data);
 			} catch (error) {
 				console.log(error);
 			}
 		};
 		getUsers();
 	}, []);
-	
 	useEffect(() => {
 			setAutheticated(isAutheticated)
 	}, [isAutheticated]);
+	console.log(users);
 	return (
 		<>
 			<main className="mt-4 ">
@@ -58,12 +59,12 @@ function Home() {
 									: "slideMenu transition-5ms top-[0px] z-10 relative"
 							}
 						>
-							{autheticated ? (
+							{isAutheticated ? (
 								<>
 									<h2 className="cursor-default">Menu</h2>
 									<div className="hidden w-28 h-28 ml-auto mr-auto lg:block">
 										<img
-											src={user.image}
+											src={user ? user.image : 'undefined'}
 											alt="goku"
 											className="w-full h-full rounded-full"
 										/>
@@ -109,7 +110,7 @@ function Home() {
 						</div>
 					</div>
 					<div className="grid gap-1 grid-cols-1 smm sm:grid-cols-3 lg:grid-cols-4 lg:w-[70%]">
-						{users.map((user, i) => {
+						{users?.map((user, i) => {
 							return <CardService key={i} user={user}></CardService>;
 						})}
 					</div>

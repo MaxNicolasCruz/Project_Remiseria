@@ -1,9 +1,19 @@
 import { Link } from "react-router-dom";
 import Button from "../ui/Button";
+import { logout } from "../../api/auth";
+import { useAuth } from "../../context/AuthContext";
 
 function Header() {
+	const { isAutheticated } = useAuth();
+
+	function logoutFc() {
+		logout().then((res) => {
+			window.location.reload();
+		});
+	}
+
 	return (
-		<header className="w-auto bg-yellow-400">
+		<header className="w-full bg-yellow-400">
 			<div className="flex flex-col items-center sm:flex-row justify-evenly sm:max-w-4xl sm:ml-auto sm:mr-auto">
 				<div className="w-20 mt-1 sm:mb-1">
 					<Link to="/">
@@ -20,13 +30,12 @@ function Header() {
 					}
 					<style>
 						{`
-      .sn-none::-webkit-search-cancel-button,
-      .sn-none::-webkit-search-clear-button {
-        -webkit-appearance: none;
-        appearance: none;
-        display: none;
-      }
-    `}
+      						.sn-none::-webkit-search-cancel-button,
+      						.sn-none::-webkit-search-clear-button {
+        						-webkit-appearance: none;
+        						appearance: none;
+        						display: none;
+								}`}
 					</style>
 					<input
 						type="search"
@@ -86,12 +95,18 @@ function Header() {
 					</li>
 				</ul>
 				<div className="mb-2 mt-2">
-					<Link to={"/login"}>
-						<Button>Login</Button>
-					</Link>
-					<Link to={"/register"}>
-						<Button>Register</Button>
-					</Link>
+					{isAutheticated ? (
+						<Button onClick={logoutFc}>Logout</Button>
+					) : (
+						<>
+							<Link to={"/login"}>
+								<Button>Login</Button>
+							</Link>
+							<Link to={"/register"}>
+								<Button>Register</Button>
+							</Link>
+						</>
+					)}
 				</div>
 			</div>
 		</header>

@@ -21,8 +21,11 @@ export const Client = sequelize.define('Client', {
     last_name: {
         type: DataTypes.STRING(30)
     },
-    genre: {
-        type: DataTypes.INTEGER
+    genre: { 
+        type: DataTypes.ENUM('Male', 'Female', 'Other')
+    },
+    description:{
+        type: DataTypes.TEXT()
     },
     date_of_birth: {
         type: DataTypes.STRING(30)
@@ -34,10 +37,10 @@ export const Client = sequelize.define('Client', {
         type: DataTypes.STRING(30)
     },
     number_phone: {
-        type: DataTypes.INTEGER
+        type: DataTypes.STRING(15)
     },
     number_document: {
-        type: DataTypes.INTEGER
+        type: DataTypes.STRING(15)
     },
     image: {
         type: DataTypes.STRING(100)

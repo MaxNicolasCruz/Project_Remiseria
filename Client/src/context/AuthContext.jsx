@@ -39,22 +39,24 @@ export const AuthProvider = ({ children }) => {
 		try {
 			if (typeRegister) {
 				const res = await registerServiceRequest(user);
-				console.log(res.data);
+				checkLogin()
 				setIsAutheticated(true);
 				return;
 			}
 			const res = await registerClientRequest(user);
-			console.log(res.data);
+			checkLogin()
 			setIsAutheticated(true);
 		} catch (error) {
 			console.log(error.response);
 			setErrors([error.response.data]);
+			return;
 		}
 	};
 
 	const signin = async (user) => {
 		try {
 			const resClient = await loginClientRequest(user);
+			checkLogin()
 			console.log(resClient);
 			setIsAutheticated(true);
 		} catch (error) {
@@ -62,6 +64,7 @@ export const AuthProvider = ({ children }) => {
 			if (error.response.status == 404) {
 				try {
 					const resService = await loginServiceRequest(user);
+					checkLogin()
 					console.log(resService);
 					setIsAutheticated(true);
 					return;
@@ -76,44 +79,45 @@ export const AuthProvider = ({ children }) => {
 		}
 	};
 
-	useEffect(() => {
-		async function checkLogin() {
-			const cookies = Cookies.get();
+	const checkLogin = async () => {
+		console.log('cook check');
+		const cookies = Cookies.get();
 
-			if (!cookies.token) {
-				setIsAutheticated(false);
-				setLoading(false);
-				setUser(null);
-				return;
-			}
-			const dataToken = await validToken(cookies.token);
-			if (!dataToken) {
-				setIsAutheticated(false);
-				setLoading(false);
-				return;
-			}
+		if (!cookies.token) {
+			setIsAutheticated(false);
 			setLoading(false);
-			console.log(dataToken);
-			try {
-				const foundClient = await getClient(dataToken.data);
-				setUser(foundClient.data);
-
-				setIsAutheticated(true);
-				console.log(foundClient);
-				return;
-			} catch (error) {
-				console.log(error);
-				if (error.response.status == 404) {
-					const foundService = await getService(dataToken.data);
-					console.log(foundService);
-					setIsAutheticated(true);
-					setUser(foundService.data);
-					return;
-				}
-				setIsAutheticated(false);
-				setLoading(false);
-			}
+			setUser(null);
+			return;
 		}
+		const dataToken = await validToken(cookies.token);
+		if (!dataToken) {
+			setIsAutheticated(false);
+			setLoading(false);
+			return;
+		}
+		setLoading(false);
+		try {
+			const foundClient = await getClient(dataToken.data);
+			console.log(foundClient);
+			setUser(foundClient.data);
+
+			setIsAutheticated(true);
+			return;
+		} catch (error) {
+			console.log(error);
+			if (error.response.status == 404) {
+				const foundService = await getService(dataToken.data);
+				setIsAutheticated(true);
+				console.log(foundService);
+				setUser(foundService.data.data);
+				return;
+			}
+			setIsAutheticated(false);
+			setLoading(false);
+		}
+	}
+
+	useEffect(() => {
 		checkLogin();
 	}, []);
 	return (

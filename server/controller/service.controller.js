@@ -1,9 +1,11 @@
 import { createToken } from "../libs/jwt.js";
 import { Service } from "../models/Service.js";
-import { Genre } from "../models/Genre.js";
-import { State } from "../models/State.js";
 import { Timetable } from "../models/Timetable.js";
-import { Payment_method } from "../models/Payment_method.js";
+import { Comment } from "../models/Comment.js";
+import { Order } from "../models/Order.js";
+import { Client } from "../models/Client.js";
+import { imgDelete } from "../middleware/deleteImg.js";
+
 import bcrypt from "bcryptjs";
 
 const userMethod = {
@@ -49,11 +51,12 @@ const userMethod = {
 
 			const token = await createToken({
 				id: user.id,
-				email: serviceFound.email,
+				email: user.email,
 			});
 			res.cookie("token", token);
-			res.json({ message: "successfully" });
+			res.status(201).json({ message: "successfully" });
 		} catch (error) {
+			imgDelete(req);
 			console.log(error);
 		}
 	},
@@ -66,12 +69,11 @@ const userMethod = {
 				email: email.trim(),
 			},
 		});
+		if (!serviceFound)
+			return res
+				.status(404)
+				.json({ message: "email does not correspond to any account" });
 		try {
-			if (!serviceFound)
-				return res
-					.status(404)
-					.json({ message: "email does not correspond to any account" });
-
 			// descrypt to password in passwordHash
 			let passwordIsMatch = await bcrypt.compare(
 				password.trim(),
@@ -111,6 +113,7 @@ const userMethod = {
 				workingHours,
 				methodOfPayment,
 				state,
+				description,
 			} = req.body;
 			const userFound = await Service.findOne({
 				where: {
@@ -120,19 +123,19 @@ const userMethod = {
 			});
 			if (!userFound)
 				return res.status(400).json({ message: "user not found" });
-			
-			Service.update(
+			await Service.update(
 				{
 					name: name,
 					last_name: lastName,
 					city: city,
 					country: country,
-					number_phone: parseInt(numberPhone),
+					number_phone: parseInt(numberPhone, 10),
 					image: req.file ? req.file.filename : userFound.image,
 					vehicle_type: vehicleType,
 					working_hours: workingHours,
 					method_of_payment: methodOfPayment,
 					state: state,
+					description: description,
 				},
 				{
 					where: {
@@ -141,10 +144,10 @@ const userMethod = {
 				}
 			);
 
-			res.status(200).json(`succesfull ${req.user.id}`);
+			res.status(201).json(`succesfull ${req.user.id}`);
 		} catch (error) {
 			console.log(error);
-			res.status(400);
+			res.status(500).json({ message: "internal server error" });
 		}
 	},
 	deleteUser: (req, res) => {
@@ -154,7 +157,7 @@ const userMethod = {
 		//     }
 		// })
 	},
-	getUser: async (req, res) => {
+	profile: async (req, res) => {
 		const serviceFound = await Service.findOne({
 			where: {
 				id: req.user.id,
@@ -162,36 +165,35 @@ const userMethod = {
 			},
 			include: [
 				{
-					model: Genre, // Reemplaza con el nombre real del modelo
-					as: "genreUser",
-					attributes: ["id", "genre"], // Reemplaza con el nombre de la columna que deseas seleccionar
-				},
-				{
-					model: State, // Reemplaza con el nombre real del modelo
-					as: "stateUser",
-					attributes: ["id", "status"], // Reemplaza con el nombre de la columna que deseas seleccionar
-				},
-				{
-					model: Timetable, // Reemplaza con el nombre real del modelo
+					model: Timetable,
 					as: "timetableUser",
-					attributes: ["id", "timetable"], // Reemplaza con el nombre de la columna que deseas seleccionar
+					attributes: ["id", "timetable"],
 				},
 				{
-					model: Payment_method, // Reemplaza con el nombre real del modelo
-					as: "methodUser",
-					attributes: ["id", "method"], // Reemplaza con el nombre de la columna que deseas seleccionar
+					model: Order,
+					attributes: ["id", "date", "method_pay", "status"],
+					include: [
+						{
+							model: Client,
+							attributes: ["name", "last_name"],
+						},
+						{
+							model: Service,
+							attributes: ["name", "last_name"],
+						},
+					],
 				},
 			],
 		});
 		if (!serviceFound)
 			return res.status(404).json({ message: "User Not Found" });
 
-		return res.json({
+		let formattedUser = {
 			id: serviceFound.id,
 			email: serviceFound.email,
 			name: serviceFound.name,
 			lastName: serviceFound.last_name,
-			genre: serviceFound.genreUser,
+			genre: serviceFound.genre,
 			dateOfBirth: serviceFound.date_of_birth,
 			city: serviceFound.city,
 			country: serviceFound.country,
@@ -200,8 +202,94 @@ const userMethod = {
 			image: `http://localhost:3000/uploads/${serviceFound.image}`,
 			vehicleType: serviceFound.vehicle_type,
 			workingHours: serviceFound.timetableUser,
-			methodOfPayment: serviceFound.methodUser,
-			state: serviceFound.stateUser,
+			methodOfPayment: serviceFound.method_of_payment,
+			state: serviceFound.state,
+			rating: serviceFound.rating,
+			orders: serviceFound.Orders,
+			description: serviceFound.description,
+		};
+		return res.json({
+			data: formattedUser,
+			metadata: {
+				timestamp: new Date(),
+				url: `http://localhost:3000/api/service/profile`,
+			},
+		});
+	},
+	getUser: async (req, res) => {
+		const serviceFound = await Service.findOne({
+			where: {
+				id: req.params.id,
+			},
+			include: [
+				{
+					model: Timetable,
+					as: "timetableUser",
+					attributes: ["id", "timetable"],
+				},
+				{
+					model: Order,
+					attributes: ["id", "date", "method_pay", "status"],
+					include: [
+						{
+							model: Client,
+							attributes: ["name", "last_name"],
+						},
+						{
+							model: Service,
+							attributes: ["name", "last_name"],
+						},
+					],
+				},
+				{
+					model: Comment,
+					attributes: ["id", "comment", "rating"],
+					include: [
+						{
+							model: Client,
+							attributes: ["name", "last_name"],
+						},
+						{
+							model: Service,
+							attributes: ["name", "last_name"],
+						},
+					],
+				},
+			],
+		});
+		if (!serviceFound)
+			return res.status(404).json({ message: "User Not Found" });
+		// return res.json(serviceFound)
+		let rating = serviceFound.Comments.reduce((sum, comment) => {
+			return sum + comment.rating;
+		}, 0);
+		
+		let formattedUser = {
+			id: serviceFound.id,
+			email: serviceFound.email,
+			name: serviceFound.name,
+			lastName: serviceFound.last_name,
+			genre: serviceFound.genre,
+			dateOfBirth: serviceFound.date_of_birth,
+			city: serviceFound.city,
+			country: serviceFound.country,
+			numberPhone: serviceFound.number_phone,
+			image: `http://localhost:3000/uploads/${serviceFound.image}`,
+			vehicleType: serviceFound.vehicle_type,
+			workingHours: serviceFound.timetableUser.timetable,
+			methodOfPayment: serviceFound.method_of_payment,
+			state: serviceFound.state,
+			rating: rating / serviceFound.Comments.length,
+			description: serviceFound.description,
+			orders: serviceFound.Orders,
+			comments: serviceFound.Comments,
+		};
+		return res.json({
+			data: { formattedUser },
+			metadata: {
+				timestamp: new Date(),
+				url: `http://localhost:3000/api/service/user/${serviceFound.id}`,
+			},
 		});
 	},
 	getAllUser: async (req, res) => {
@@ -209,24 +297,9 @@ const userMethod = {
 			attributes: { exclude: ["password", "number_document"] },
 			include: [
 				{
-					model: Genre,
-					as: "genreUser",
-					attributes: ["genre"],
-				},
-				{
-					model: State,
-					as: "stateUser",
-					attributes: ["status"],
-				},
-				{
 					model: Timetable,
 					as: "timetableUser",
 					attributes: ["timetable"],
-				},
-				{
-					model: Payment_method,
-					as: "methodUser",
-					attributes: ["method"],
 				},
 			],
 		});
@@ -248,10 +321,16 @@ const userMethod = {
 			orders: user.orders,
 			rating: user.rating,
 			state: user.stateUser ? user.stateUser.status : null,
+			description: user.description,
 		}));
 
 		res.json({
-			users: formattedUsers,
+			data: formattedUsers,
+			metadata: {
+				totalCount: formattedUsers.length,
+				timestamp: new Date(),
+				url: `http://localhost:3000/api/service/user/${formattedUsers.id}`,
+			},
 		});
 	},
 };

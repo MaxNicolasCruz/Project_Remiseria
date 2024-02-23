@@ -1,7 +1,6 @@
 import { DataTypes } from 'sequelize';
 import { sequelize } from "../database/database.js";
 
-import { Genre } from "./Genre.js"
 
 export const Service = sequelize.define('Service', {
     // Model attributes are defined here
@@ -23,13 +22,16 @@ export const Service = sequelize.define('Service', {
         type: DataTypes.STRING(30)
     },
     genre: {
-        type: DataTypes.INTEGER
+        type: DataTypes.ENUM('Male', 'Female', 'Other')
+    },
+    description:{
+        type: DataTypes.TEXT()
     },
     date_of_birth: {
         type: DataTypes.STRING(30)
     },
     number_phone: {
-        type: DataTypes.INTEGER
+        type: DataTypes.STRING(15)
     },
     city: {
         type: DataTypes.STRING(30)
@@ -38,7 +40,7 @@ export const Service = sequelize.define('Service', {
         type: DataTypes.STRING(30)
     },
     number_document: {
-        type: DataTypes.INTEGER
+        type: DataTypes.STRING(15)
     },
     image: {
         type: DataTypes.STRING(100)
@@ -50,7 +52,7 @@ export const Service = sequelize.define('Service', {
         type: DataTypes.INTEGER
     },
     method_of_payment: {
-        type: DataTypes.INTEGER
+        type: DataTypes.ENUM('Paypal', 'Efectivo', 'Mercado Pago', 'Uala')
     },
     orders: {
         type: DataTypes.INTEGER,
@@ -61,19 +63,9 @@ export const Service = sequelize.define('Service', {
         type: DataTypes.INTEGER
     },
     state: {
-        type: DataTypes.INTEGER
+        type: DataTypes.ENUM('En servicio','Fuera de Servicio','En Pedido')
     },
 }, {
     timestamps: false // Esta línea desactiva las columnas createdAt y updatedAt
 });
 
-
-Genre.hasMany(Service, { // Service-> Service es el valor de alias en Service.js
-    as: "services", // El nombre del modelo pero en plural
-    foreignKey: "genre"
-})
-
-Service.belongsTo(Genre, { // models.Genre -> Genres es el valor de alias en genres.js
-    as: "genreUser",
-    foreignKey: "genre"
-})

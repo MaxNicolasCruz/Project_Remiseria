@@ -42,4 +42,16 @@
 			transform: rotate(50deg) skew(10deg) scale(1.14) ;
 		}
 	}
+	.nav-info-user {
+		display: inline-block;
+		background-color: rgb(201, 201, 67);
+		width: 30%;
+		/* border-radius: 20px; */
+		height: 30px;
+		cursor: pointer;
+		transition-duration: 0.3s;
+		max-width: 120px;
+		/* padding-top: 1px; */
+		margin: 0 15px 0 5px ;
+	}
 }

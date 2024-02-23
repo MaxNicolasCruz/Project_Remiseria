@@ -24,16 +24,7 @@ function Register() {
 
 	const onSubmit = handleSubmit(async (values) => {
 		try {
-			// Convierte el género a entero si es necesario
-			values.genre = parseInt(values.genre, 10);
-
 			//configuramos el formData
-			if (typeRegister) {
-				values.workingHours = parseInt(values.workingHours, 10);
-				values.methodOfPayment = parseInt(values.methodOfPayment, 10);
-				values.state = parseInt(values.state, 10);
-			}
-
 			const formData = new FormData();
 
 			// Agrega todos los campos del formulario al formData
@@ -48,7 +39,7 @@ function Register() {
 			try {
 				await signup(formData, typeRegister);
 				// Navegar a la página de inicio de sesión después de un registro exitoso
-				navigate("/login");
+				if (!errorsBack) return navigate("/");
 			} catch (error) {
 				console.error("Error al procesar el formulario:", error);
 			}
@@ -162,14 +153,14 @@ function Register() {
 							message: "Empty Field",
 						})}
 					>
-						<option value="1" className="bg-slate-100">
-							Undefined
+						<option value="Male" className="bg-slate-100">
+							Male
 						</option>
-						<option value="2" className="bg-slate-100 ">
-							Woman
+						<option value="Female" className="bg-slate-100 ">
+							Female
 						</option>
-						<option value="3" className="bg-slate-100 ">
-							Man
+						<option value="Other" className="bg-slate-100 ">
+							Other
 						</option>
 					</select>
 					{errors.genre && (
@@ -406,10 +397,10 @@ function Register() {
 									message: "Empty Field",
 								})}
 							>
-								<option value="1">Paypal</option>
-								<option value="2">Cash</option>
-								<option value="3">Mercado Pago</option>
-								<option value="4">Uala</option>
+								<option value="Paypal">Paypal</option>
+								<option value="Efectivo">Efectivo</option>
+								<option value="Mercado Pago">Mercado Pago</option>
+								<option value="Uala">Uala</option>
 							</select>
 							{errors.methodOfPayment && (
 								<span className="msg-error">
@@ -428,9 +419,9 @@ function Register() {
 									message: "Empty Field",
 								})}
 							>
-								<option value="1">In Service</option>
-								<option value="2">Out Service</option>
-								<option value="3">In Order</option>
+								<option value="En servicio">In Service</option>
+								<option value="Fuera de Servicio">Out Service</option>
+								<option value="En Pedido">In Order</option>
 							</select>
 							{errors.state && (
 								<span className="msg-error">{errors.state.message}</span>
@@ -505,7 +496,8 @@ function Register() {
 							errorsBack[0].error.map((error, i) => {
 								return (
 									<p key={i} className="msg-error mb-1">
-										{error.message}
+										`{error.path}: {error.message}`
+										
 									</p>
 								);
 							})}

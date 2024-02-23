@@ -45,8 +45,12 @@ export const loginServiceRequest = (user) =>
 
 export const getAllServiceRequest = () => instance.get(`/service/getUsers`);
 
+export const getUserService = (id) => instance.get(`/service/user/${id}`);
+
 export const getService = () => instance.get(`/service/profile`);
 
 export const getClient = () => instance.get(`/client/profile`);
+
+export const logout = () => instance.post(`/client/logout`);
 
 export const validToken = () => instance.get(`/validToken`);

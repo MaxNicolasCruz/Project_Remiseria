@@ -43,22 +43,15 @@ let validation = {
 	country: z.string({
 		message: "Empty Field",
 	}),
-	genre: z
-		.string() // Asumo que en el formulario estás obteniendo la hora como string
-		.refine((value) => !isNaN(Number(value)), {
-			message: "must be a number",
-		})
-		.transform((value) => Number(value)) // Convierte a número
-		.refine((value) => value >= 1 && value <= 3, {
-			message: "should be between 1 and 3",
-		}),
+	genre: z 
+		.enum(["Male", "Female", "Other"]),
 	numberPhone: z
 		.string()
 		.refine((value) => !isNaN(Number(value)), {
 			message: "must be a number",
 		})
 		.transform((value) => Number(value))
-		.refine((value) => value > 100, {
+		.refine((value) => value > 9, {
 			message: "Must have at least 9 characters",
 		}),
 	numberDocument: z
@@ -94,7 +87,7 @@ let validation = {
 		.string({
 			message: "debe ser de tipo string",
 		})
-		.min(20, {
+		.min(7, {
 			message: "must have at least 7 characters",
 		}),
 	workingHours: z
@@ -107,23 +100,9 @@ let validation = {
 			message: "should be between 2 and 4",
 		}),
 	methodOfPayment: z
-		.string() // Asumo que en el formulario estás obteniendo la hora como string
-		.refine((value) => !isNaN(Number(value)), {
-			message: "must be a number",
-		})
-		.transform((value) => Number(value)) // Convierte a número
-		.refine((value) => value >= 1 && value <= 4, {
-			message: "should be between 1 and 4",
-		}),
+	.enum(['Paypal', 'Efectivo', 'Mercado Pago', 'Uala']),
 	state: z
-		.string() // Asumo que en el formulario estás obteniendo la hora como string
-		.refine((value) => !isNaN(Number(value)), {
-			message: "must be a number",
-		})
-		.transform((value) => Number(value)) // Convierte a número
-		.refine((value) => value >= 1 && value <= 3, {
-			message: "should be between 1 and 3",
-		}),
+	.enum(['En servicio','Fuera de Servicio','En Pedido']),
 };
 
 export const registerClient = z.object({

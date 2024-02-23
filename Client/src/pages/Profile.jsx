@@ -17,35 +17,48 @@ function Profile() {
 		formState: { errors },
 		setValue,
 		watch,
-	} = useForm({
-		defaultValues: {
-			name: user.name,
-			lastName: user.lastName,
-			dateOfBirth: user.dateOfBirth,
-			city: user.city,
-			genre: user.genre?.genre || undefined,
-			country: user.country,
-			numberPhone: user.numberPhone,
-			numberDocument: user.numberDocument,
-			email: user.email,
-			password: user.password,
-			// Añade otras propiedades según sea necesario
-			vehicleType: user.vehicleType || undefined,
-			workingHours: user.workingHours?.id || undefined,
-			methodOfPayment: user.methodOfPayment?.id || undefined,
-			state: user.state?.id || undefined,
-		},
-	});
+	} = useForm();
 	const [slide, setSlide] = useState(false);
 	const [isEditing, setEditing] = useState(false);
 	const [typeAccount, setTypeAccount] = useState(false);
 	const [provinces, setProvinces] = useState(false);
 	const [loading, setLoading] = useState(true);
 	const [load, setLoad] = useState(true);
-	const [errorsBack, setErrors] = useState([]);
+	const [errorsBack, setErrorsBack] = useState([]);
 	const [selectedProvinceData, setSelectedProvinceData] = useState(
 		user.city || ""
 	);
+
+	useEffect(() => {
+		const loadUserData = async () => {
+			// Esperar hasta que la propiedad user esté disponible
+			if (!user) {
+				return;
+			}
+
+			// Después de obtener los datos, establecer los valores predeterminados en el formulario
+			setValue("name", user.name);
+			setValue("lastName", user.lastName);
+			setValue("dateOfBirth", user.dateOfBirth);
+			setValue("city", user.city);
+			setValue("genre", user.genre);
+			setValue("country", user.country);
+			setValue("numberPhone", user.numberPhone);
+			setValue("numberDocument", user.numberDocument);
+			setValue("email", user.email);
+			setValue("password", user.password);
+			setValue("description", user.description || "");
+			setValue("vehicleType", user.vehicleType || "");
+			setValue("workingHours", user.workingHours?.id || "");
+			setValue("methodOfPayment", user.methodOfPayment || "");
+			setValue("state", user.state || "");
+
+			// Cambiar el estado de carga a false cuando los datos estén disponibles
+			timeLoad();
+		};
+
+		loadUserData();
+	}, [user, setValue]);
 
 	useEffect(() => {
 		setTypeAccount(Object.keys(user).length > 11);
@@ -54,63 +67,11 @@ function Profile() {
 	useEffect(() => {
 		if (errorsBack.length > 0) {
 			const timer = setTimeout(() => {
-				setErrors([]);
+				setErrorsBack([]);
 			}, 5000);
 			return () => clearTimeout(timer);
 		}
 	}, [errorsBack]);
-	// console.log(watch());
-	const onSubmit = handleSubmit(async (data) => {
-		// Aquí puedes realizar alguna lógica de validación si es necesario
-
-		const { genre, password, dateOfBirth, numberDocument, email, ...postData } =
-			data;
-		try {
-			// Crea un nuevo objeto FormData
-			const formData = new FormData();
-
-			if (typeAccount) {
-				postData.workingHours = parseInt(postData.workingHours, 10);
-				postData.methodOfPayment = parseInt(postData.methodOfPayment, 10);
-				postData.state = parseInt(postData.state, 10);
-			}
-
-			///Agrega todos los campos del formulario al formData
-			Object.keys(postData).forEach((key) => {
-				if (key === "image") {
-					if (postData[key] && postData[key].length === 1) {
-						formData.append(key, postData[key][0]);
-					} else {
-						formData.append(key, null);
-					}
-				} else {
-					formData.append(key, postData[key]);
-				}
-			});
-			console.log(postData); // Esto debería mostrar los datos actualizados
-
-			// Después de realizar las operaciones, puedes desactivar el modo de edición
-			console.log("ready for send back");
-			if (typeAccount) {
-				let res = await updateServiceRequest(formData);
-				console.log(res);
-
-				setLoading({ status: "successfully saved", color: "bg-green-500" });
-				window.location.reload();
-				return;
-			} else {
-				let res = await updateClientRequest(formData);
-				console.log(res);
-				setLoading({ status: "successfully saved", color: "bg-green-500" });
-				window.location.reload();
-				return;
-			}
-		} catch (error) {
-			setLoading({ status: "Error when saving changes", color: "bg-red-500" });
-			setErrors([error.response.data]);
-			console.error("Error when saving changes:", error);
-		}
-	});
 
 	useEffect(() => {
 		async function getProvicesAll() {
@@ -129,6 +90,49 @@ function Profile() {
 		timeLoad();
 	}, []);
 
+	// console.log(watch());
+	const onSubmit = handleSubmit(async (data) => {
+		// Aquí puedes realizar alguna lógica de validación si es necesario
+
+		const { genre, password, dateOfBirth, numberDocument, email, ...postData } =
+			data;
+
+		// Crea un nuevo objeto FormData
+		const formData = new FormData();
+
+		///Agrega todos los campos del formulario al formData
+		Object.keys(postData).forEach((key) => {
+			if (key === "image") {
+				if (postData[key] && postData[key].length === 1) {
+					formData.append(key, postData[key][0]);
+				} else {
+					formData.append(key, null);
+				}
+			} else {
+				formData.append(key, postData[key]);
+			}
+		});
+
+		// Después de realizar las operaciones, puedes desactivar el modo de edición
+		console.log("ready for send back");
+		try {
+			if (typeAccount) {
+				let res = await updateServiceRequest(formData);
+				setLoading({ status: "successfully saved", color: "bg-green-500" });
+				window.location.reload();
+				return;
+			}
+
+			let res = await updateClientRequest(formData);
+			window.location.reload();
+			setLoading({ status: "successfully saved", color: "bg-green-500" });
+			return;
+		} catch (error) {
+			setLoading({ status: "Error when saving changes", color: "bg-red-500" });
+			setErrorsBack([error.response.data]);
+			console.error("Error when saving changes:", error);
+		}
+	});
 	function handleProvinceChange(event) {
 		if (event.target.value !== selectedProvinceData) {
 			setSelectedProvinceData(event.target.value);
@@ -138,7 +142,7 @@ function Profile() {
 		// Esperar 2 segundos antes de cambiar el estado a false
 		setTimeout(() => {
 			setLoad(false);
-		}, 1000);
+		}, 500);
 	};
 	return (
 		<main className="bg-gray-800 py-2">
@@ -219,7 +223,7 @@ function Profile() {
 											id="genre"
 											name="genre"
 											disabled
-											defaultValue={user.genre.genre}
+											defaultValue={user.genre}
 											{...register("genre")}
 										></Input>
 										<svg
@@ -420,6 +424,31 @@ function Profile() {
 											<span className="msg-error">{errors.image.message}</span>
 										)}
 									</div>
+									<div className="scale-75 relative max-w-[200px] sm:max-w-[50%] w-[78%]">
+										<Label htmlFor="description">Description</Label>
+										<textarea
+											placeholder={user.description}
+											name="description"
+											id="description"
+											className="placeholder:pb-20 text-black outline-none rounded pl-1 pr-1"
+											{...(!isEditing
+												? {
+														value: user.description,
+														readOnly: true,
+														disabled: true,
+												  }
+												: {
+														placeholder: user.description,
+												  })}
+											{...register("description")}
+										/>
+
+										{errors.vehicleType && (
+											<span className="msg-error">
+												{errors.vehicleType.message}
+											</span>
+										)}
+									</div>
 									{typeAccount && (
 										<>
 											<div className="scale-75 relative max-w-[200px] sm:max-w-[50%] w-[78%]">
@@ -482,17 +511,17 @@ function Profile() {
 													name="methodOfPayment"
 													id="methodOfPayment"
 													className="select-style w-full "
-													defaultValue={user.methodOfPayment.id} // Establece el valor predeterminado
+													defaultValue={user.methodOfPayment} // Establece el valor predeterminado
 													disabled={!isEditing} // Deshabilita el select si no está en modo de edición
 													{...register("methodOfPayment", {
 														required: true,
 														message: "Empty Field",
 													})}
 												>
-													<option value="1">Paypal</option>
-													<option value="2">Cash</option>
-													<option value="3">Mercado Pago</option>
-													<option value="4">Uala</option>
+													<option value="Paypal">Paypal</option>
+													<option value="Efectivo">Efectivo</option>
+													<option value="Mercado Pago">Mercado Pago</option>
+													<option value="Uala">Uala</option>
 												</select>
 												{errors.methodOfPayment && (
 													<span className="msg-error">
@@ -506,16 +535,16 @@ function Profile() {
 													name="state"
 													id="state"
 													className="select-style w-full "
-													defaultValue={user.state.id} // Establece el valor predeterminado
+													defaultValue={user.state} // Establece el valor predeterminado
 													disabled={!isEditing} // Deshabilita el select si no está en modo de edición
 													{...register("state", {
 														required: true,
 														message: "Empty Field",
 													})}
 												>
-													<option value="1">In Service</option>
-													<option value="2">Out Service</option>
-													<option value="3">In Order</option>
+													<option value="En servicio">In Service</option>
+													<option value="Fuera de Servicio">Out Service</option>
+													<option value="En Pedido">In Order</option>
 												</select>
 												{errors.state && (
 													<span className="msg-error">
@@ -671,14 +700,5 @@ function Profile() {
 		</main>
 	);
 }
-
-/*
-rombo {
-  width 100
-  h100
-  bg
-  transform: rotate(45deg) skewX(10deg) skewY(10deg)
-}
-*/
 
 export default Profile;

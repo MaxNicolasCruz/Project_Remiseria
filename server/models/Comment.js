@@ -1,11 +1,12 @@
 import { DataTypes } from 'sequelize';
-import { sequelize } from "../database/model.js";
+import { sequelize } from "../database/database.js";
 
 // another table
 import { Client } from "./Client.js";
 import { Service } from "./Service.js";
+import { Order } from "./Order.js";
 
-const Comment = sequelize.define('Comment', {
+export const Comment = sequelize.define('Comment', {
     // Model attributes are defined here
     id: {
         type: DataTypes.INTEGER,
@@ -22,6 +23,10 @@ const Comment = sequelize.define('Comment', {
     id_service: {
         type: DataTypes.INTEGER,
         allowNull: false
+    },
+    id_order:{
+        type: DataTypes.INTEGER,
+        allowNull:false
     },
     rating: {
         type: DataTypes.TINYINT.UNSIGNED,
@@ -56,3 +61,8 @@ Comment.belongsTo(Service, {
     foreignKey: 'id_service',
     targetKey: 'id'
 })
+
+
+Order.hasOne(Comment)
+
+Comment.belongsTo(Order)
