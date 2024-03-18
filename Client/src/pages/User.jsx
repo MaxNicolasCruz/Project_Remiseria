@@ -6,6 +6,7 @@ import CardReview from "../components/viewUser/CardReview";
 import CardHistory from "../components/viewUser/CardHistory";
 import { FaCar } from "react-icons/fa";
 import { IoCall, IoChatbubbleEllipsesOutline } from "react-icons/io5";
+import Chat from "../components/ui/Chat";
 
 function User(props) {
 	const [user, setUser] = useState(null);
@@ -13,6 +14,7 @@ function User(props) {
 	const [typeAccount, setTypeAccount] = useState(false);
 	const [typeInfo, setInfo] = useState("info");
 	const [status, setStatus] = useState(false);
+	const [chat, setChat] = useState(false);
 
 	useEffect(() => {
 		async function getUser() {
@@ -22,14 +24,14 @@ function User(props) {
 				const age = new Date().getFullYear() - dateOfBirth.getFullYear();
 				res.data.data.formattedUser.dateOfBirth = age;
 				setUser(res.data.data.formattedUser);
-				console.log(user);
+				
 			} catch (error) {
 				console.log(error);
 			}
 		}
 		getUser();
 	}, []);
-
+	// console.log(user);
 	useEffect(() => {
 		if (user) {
 			let newClass = "";
@@ -50,7 +52,7 @@ function User(props) {
 
 			setStatus(newClass);
 
-			setTypeAccount(Object.keys(user).length > 11);
+			setTypeAccount(Object.keys(user).length > 11 ? 'service' : 'client');
 		}
 	}, [user]);
 
@@ -94,13 +96,17 @@ function User(props) {
 							</div>
 							<div className="hidden lg:flex lg:h-7 lg:justify-center items-center w-3/4">
 								<div className="flex justify-around px-5 sm:justify-evenly lg:w-full lg:justify-between ">
-									<div className="bg-[#f1f100] scale-150 rounded-full p-1 hover:bg-[#5d5e5c] hover:text-white transition">
-										<IoChatbubbleEllipsesOutline fontSize={22} className="cursor-pointer "/>
+									<div className="bg-yellowPrimary scale-150 rounded-full p-1 hover:bg-[#5d5e5c] hover:text-white transition">
+										<IoChatbubbleEllipsesOutline
+											fontSize={22}
+											className="cursor-pointer "
+											onClick={() => setChat(!chat)}
+										/>
 									</div>
-									<div className="bg-[#f1f100] scale-150 rounded-full p-1 hover:bg-[#5d5e5c] hover:text-white transition">
-										<IoCall fontSize={22}  className="cursor-pointer "/>
+									<div className="bg-yellowPrimary scale-150 rounded-full p-1 hover:bg-[#5d5e5c] hover:text-white transition">
+										<IoCall fontSize={22} className="cursor-pointer " />
 									</div>
-									<div className="bg-[#f1f100] scale-150 rounded-full p-1 hover:bg-[#5d5e5c] hover:text-white transition">
+									<div className="bg-yellowPrimary scale-150 rounded-full p-1 hover:bg-[#5d5e5c] hover:text-white transition">
 										<FaCar fontSize={22} className="cursor-pointer " />
 									</div>
 								</div>
@@ -152,17 +158,22 @@ function User(props) {
 					</section>
 					<section>
 						<div className="flex justify-around px-5 sm:justify-evenly lg:hidden">
-							<div className="bg-[#f1f100] scale-150 rounded-full p-1">
-								<IoChatbubbleEllipsesOutline />
+							<div className="bg-yellowPrimary scale-150 rounded-full p-1">
+								<IoChatbubbleEllipsesOutline onClick={() => setChat(!chat)} />
 							</div>
-							<div className="bg-[#f1f100] scale-150 rounded-full p-1">
+							<div className="bg-yellowPrimary scale-150 rounded-full p-1">
 								<IoCall />
 							</div>
-							<div className="bg-[#f1f100] scale-150 rounded-full p-1">
+							<div className="bg-yellowPrimary scale-150 rounded-full p-1">
 								<FaCar />
 							</div>
 						</div>
 					</section>
+					{chat && (
+						<>
+							<Chat user={{...user,type:'service'}} typeAccount={typeAccount}></Chat>
+						</>
+					)}
 				</>
 			) : (
 				<p>Loading...</p>

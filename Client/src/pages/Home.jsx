@@ -16,7 +16,6 @@ function Home() {
 		const getUsers = async () => {
 			try {
 				const res = await getAllServiceRequest();
-				console.log(res);
 				setUsers(res.data.data);
 			} catch (error) {
 				console.log(error);
@@ -27,7 +26,6 @@ function Home() {
 	useEffect(() => {
 			setAutheticated(isAutheticated)
 	}, [isAutheticated]);
-	console.log(users);
 	return (
 		<>
 			<main className="mt-4 ">
@@ -77,7 +75,7 @@ function Home() {
 											<Link to={"/"}>Explore Categories</Link>
 										</li>
 										<li>
-											<Link to={"/"}>Chat</Link>
+											<Link to={"/chats"}>Chat</Link>
 										</li>
 										<li>
 											<Link to={"/"}>My Orders</Link>

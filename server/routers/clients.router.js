@@ -15,7 +15,7 @@ router.post(
 	userMethod.createUser
 );
 router.post("/login", userMethod.loginUser);
-router.post("/logout", authRequired, userMethod.logout);
+router.post("/logout", userMethod.logout);
 router.patch(
 	"/update",
 	fileUpload.single("image"),
@@ -26,5 +26,6 @@ router.patch(
 router.delete("/delete", authRequired, userMethod.deleteUser);
 router.get("/profile", authRequired, userMethod.getUser);
 router.get("/getUsers", userMethod.getAllUser);
+router.get("/getChats", authRequired, userMethod.getAllChats);
 
 export default router;

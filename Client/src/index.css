@@ -29,6 +29,10 @@
 			grid-template-columns: repeat(2, minmax(0, 1fr));
 		}
 	}
+	.gradiante-bg {
+		background: linear-gradient(to left, #aeafb1, #a4bb65, #3f3d3e);
+	}
+
 	.transition-5ms {
 		transition: all 0.4s;
 	}

@@ -1,5 +1,10 @@
 import { createToken } from "../libs/jwt.js";
 import { Client } from "../models/Client.js";
+import { Service } from "../models/Service.js";
+
+import { Chat } from "../models/Chat.js";
+import { Op } from "sequelize";
+
 import bcrypt from "bcryptjs";
 
 const userMethod = {
@@ -37,6 +42,7 @@ const userMethod = {
 			const token = await createToken({
 				id: user.id,
 				email: user.email,
+				type: "client",
 			});
 			res.cookie("token", token);
 			res.status(201).json({ message: "successfully" });
@@ -71,6 +77,7 @@ const userMethod = {
 			const token = await createToken({
 				id: userFound.id,
 				email: userFound.email,
+				type: "client",
 			});
 			res.cookie("token", token);
 			res.json({
@@ -81,10 +88,16 @@ const userMethod = {
 		}
 	},
 	logout: async (req, res) => {
-		res.cookie("token", "", {
-			expire: new Date(0),
-		});
-		return res.sendStatus(200);
+		try {
+			res.cookie("token", "", {
+				expire: new Date(0),
+			});
+
+			return res.sendStatus(200);
+		} catch (error) {
+			console.log(error);
+			return res.status(500).json({ message: "internal server error" });
+		}
 	},
 	updateUser: async (req, res) => {
 		const { name, lastName, city, country, numberPhone, description } =
@@ -133,7 +146,7 @@ const userMethod = {
 
 		if (!userFound) return res.status(404).json({ message: "User Not Found" });
 
-		return res.json({
+		let formattedUsers = {
 			id: userFound.id,
 			email: userFound.email,
 			name: userFound.name,
@@ -145,10 +158,19 @@ const userMethod = {
 			numberPhone: userFound.number_phone,
 			numberDocument: userFound.number_document,
 			image: `http://localhost:3000/uploads/${userFound.image}`,
+		};
+
+		return res.json({
+			data: formattedUsers,
+			metadata: {
+				totalCount: formattedUsers.length,
+				timestamp: new Date(),
+				url: `http://localhost:3000/api/client/user/${formattedUsers.id}`,
+			},
 		});
 	},
 	getAllUser: async (req, res) => {
-		let user = []
+		let user = [];
 		try {
 			const allUser = await Client.findAll({
 				attributes: { exclude: ["password", "number_document"] },
@@ -169,9 +191,8 @@ const userMethod = {
 			}));
 		} catch (error) {
 			console.log();
-			return res.status(500).json({message: 'internal server error'})
+			return res.status(500).json({ message: "internal server error" });
 		}
-		
 
 		res.status(200).json({
 			data: user,
@@ -181,6 +202,85 @@ const userMethod = {
 				url: `http://localhost:3000/api/service/user/${user.id}`,
 			},
 		});
+	},
+	getAllChats: async (req, res) => {
+		let user = await Client.findByPk(req.user.id);
+		if (!user) res.status(401).json({ message: "user not found" });
+		try {
+			let chats = await Chat.findAll({
+				where: {
+					[Op.or]: [
+						{ id_sender: user.id, sender_type: "client" },
+						{ id_receiver: user.id, receiver_type: "client" },
+					],
+				},
+				order: [["date", "ASC"]], // Opcional: Puedes ajustar el orden según tus necesidades
+			});
+
+			const groupedChats = {};
+
+			for (const chat of chats) {
+				const otherUser =
+					chat.id_sender === user.id && chat.sender_type === 'client'
+						? { id: chat.id_receiver, typeReceiver: chat.receiver_type }
+						: { id: chat.id_sender, typeSender: chat.sender_type };
+				if (!groupedChats[otherUser.id]) {
+					groupedChats[otherUser.id] = [];
+				}
+
+				let otherUserData;
+
+				if (
+					otherUser.typeReceiver === "client" ||
+					otherUser.typeSender === "client"
+				) {
+					otherUserData = await Client.findByPk(otherUser.id);
+				} else if (
+					otherUser.typeReceiver === "service" ||
+					otherUser.typeSender === "service"
+				) {
+					otherUserData = await Service.findByPk(otherUser.id);
+				}
+
+				const buildUserObject = (id, userData, isSender) => {
+					return {
+						id: id,
+						name: isSender ? user.name : userData.name,
+						lastName: isSender ? user.last_name : userData.last_name,
+						type: isSender ? "client" : "service",
+						image: isSender
+							? `http://localhost:3000/uploads/${user.image}`
+							: `http://localhost:3000/uploads/${userData.image}`,
+					};
+				};
+				
+				if (otherUserData) {
+					const isSender = chat.id_sender === user.id && chat.sender_type === 'client';
+					groupedChats[otherUser.id].push({
+						id: chat.id,
+						message: chat.message,
+						sender: buildUserObject(chat.id_sender, otherUserData, isSender),
+						receiver: buildUserObject(
+							chat.id_receiver,
+							otherUserData,
+							!isSender
+						),
+						date: chat.date,
+					});
+				}
+			}
+
+			return res.status(200).json({
+				data: groupedChats,
+				metadata: {
+					totalCount: Object.keys(groupedChats).length,
+					timestamp: new Date(),
+				},
+			});
+		} catch (error) {
+			console.log(error);
+			return res.status(500).json({ message: "error internal server" });
+		}
 	},
 };
 

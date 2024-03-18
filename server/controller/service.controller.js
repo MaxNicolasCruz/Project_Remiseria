@@ -5,6 +5,8 @@ import { Comment } from "../models/Comment.js";
 import { Order } from "../models/Order.js";
 import { Client } from "../models/Client.js";
 import { imgDelete } from "../middleware/deleteImg.js";
+import { Chat } from "../models/Chat.js";
+import { Op } from "sequelize";
 
 import bcrypt from "bcryptjs";
 
@@ -52,6 +54,7 @@ const userMethod = {
 			const token = await createToken({
 				id: user.id,
 				email: user.email,
+				type: "service",
 			});
 			res.cookie("token", token);
 			res.status(201).json({ message: "successfully" });
@@ -85,6 +88,7 @@ const userMethod = {
 			const token = await createToken({
 				id: serviceFound.id,
 				email: serviceFound.email,
+				type: "service",
 			});
 			res.cookie("token", token);
 			res.json({
@@ -263,7 +267,7 @@ const userMethod = {
 		let rating = serviceFound.Comments.reduce((sum, comment) => {
 			return sum + comment.rating;
 		}, 0);
-		
+
 		let formattedUser = {
 			id: serviceFound.id,
 			email: serviceFound.email,
@@ -332,6 +336,81 @@ const userMethod = {
 				url: `http://localhost:3000/api/service/user/${formattedUsers.id}`,
 			},
 		});
+	},
+	getAllChats: async (req, res) => {
+		let user = await Service.findByPk(req.user.id);
+		if (!user) res.status(401).json({ message: "user not found" });
+		try {
+			let chats = await Chat.findAll({
+				where: {
+					[Op.or]: [
+						{ id_sender: user.id, sender_type: "service" },
+						{ id_receiver: user.id, receiver_type: "service" },
+					],
+				},
+				order: [["date", "ASC"]], // Opcional: Puedes ajustar el orden según tus necesidades
+			});
+
+			const groupedChats = {};
+
+			for (const chat of chats) {
+				const otherUser =
+					chat.id_sender === user.id && chat.sender_type === 'service'
+						? { id: chat.id_receiver, typeReceiver: chat.receiver_type }
+						: { id: chat.id_sender, typeSender: chat.sender_type };
+				if (!groupedChats[otherUser.id]) {
+					groupedChats[otherUser.id] = [];
+				}
+				let otherUserData;
+				if (
+					otherUser.typeReceiver === "client" ||
+					otherUser.typeSender === "client"
+				) {
+					otherUserData = await Client.findByPk(otherUser.id);
+				} else if (
+					otherUser.typeReceiver === "service" ||
+					otherUser.typeSender === "service"
+				) {
+					otherUserData = await Service.findByPk(otherUser.id);
+				}
+
+				const buildUserObject = (id, userData, isSender) => {
+					return {
+						id: id,
+						name: isSender ? user.name : userData.name,
+						lastName: isSender ? user.last_name : userData.last_name,
+						type: isSender ? "service" : otherUser.typeSender? otherUser.typeSender : otherUser.typeReceiver,
+						image: isSender ? `http://localhost:3000/uploads/${user.image}` : `http://localhost:3000/uploads/${userData.image}`,
+					};
+				};
+				if (otherUserData) {
+					const isSender = chat.id_sender === user.id && chat.sender_type === 'service';
+					groupedChats[otherUser.id].push({
+						id: chat.id,
+						message: chat.message,
+						sender: buildUserObject(chat.id_sender, otherUserData, isSender),
+						receiver: buildUserObject(
+							chat.id_receiver,
+							otherUserData,
+							!isSender
+						),
+						date: chat.date,
+					});
+					
+				}
+			}
+
+			return res.status(200).json({
+				data: groupedChats,
+				metadata: {
+					totalCount: Object.keys(groupedChats).length,
+					timestamp: new Date(),
+				},
+			});
+		} catch (error) {
+			console.log(error);
+			return res.status(500).json({ message: "error internal server" });
+		}
 	},
 };
 

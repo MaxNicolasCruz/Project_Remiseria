@@ -26,5 +26,6 @@ router.delete("/delete", authRequired, methodServices.deleteUser);
 router.get("/profile", authRequired, methodServices.profile);
 router.get("/user/:id", methodServices.getUser);
 router.get("/getUsers", methodServices.getAllUser);
+router.get("/getChats", authRequired, methodServices.getAllChats);
 
 export default router;

@@ -11,32 +11,32 @@ router.get("/", async (req, res) => {
 
 	jwt.verify(token, TOKEN_SECRET, async (err, user) => {
 		if (err) return res.status(401).json({ message: "Unauthorized" });
-		const { id, email } = user;
-		const FoundClient = await Client.findOne({
-			where: {
-				id,
-				email,
-			},
-		});
+		const { id, email, type } = user;
 
-		if (!FoundClient) {
-			const FoundService = await Service.findOne({
+		let foundUser = null;
+		console.log(user);
+		if (type === "client") {
+			foundUser = await Client.findOne({
 				where: {
 					id,
 					email,
 				},
 			});
-
-			if (!FoundService)
-				return res.status(401).json({ message: "Unauthorized" });
-			return res.json({
-				id: FoundService.id,
-				email: FoundService.email
+		} else if (type === "service") {
+			foundUser = await Service.findOne({
+				where: {
+					id,
+					email,
+				},
 			});
 		}
+		
+		if (!foundUser) return res.status(401).json({ message: "not found" });
+
 		return res.json({
-			id: FoundClient.id,
-			email: FoundClient.email
+			id: foundUser.id,
+			email: foundUser.email,
+			type: type
 		});
 	});
 });

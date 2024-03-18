@@ -39,12 +39,12 @@ export const AuthProvider = ({ children }) => {
 		try {
 			if (typeRegister) {
 				const res = await registerServiceRequest(user);
-				checkLogin()
+				checkLogin();
 				setIsAutheticated(true);
 				return;
 			}
 			const res = await registerClientRequest(user);
-			checkLogin()
+			checkLogin();
 			setIsAutheticated(true);
 		} catch (error) {
 			console.log(error.response);
@@ -56,7 +56,7 @@ export const AuthProvider = ({ children }) => {
 	const signin = async (user) => {
 		try {
 			const resClient = await loginClientRequest(user);
-			checkLogin()
+			checkLogin();
 			console.log(resClient);
 			setIsAutheticated(true);
 		} catch (error) {
@@ -64,7 +64,7 @@ export const AuthProvider = ({ children }) => {
 			if (error.response.status == 404) {
 				try {
 					const resService = await loginServiceRequest(user);
-					checkLogin()
+					checkLogin();
 					console.log(resService);
 					setIsAutheticated(true);
 					return;
@@ -80,7 +80,6 @@ export const AuthProvider = ({ children }) => {
 	};
 
 	const checkLogin = async () => {
-		console.log('cook check');
 		const cookies = Cookies.get();
 
 		if (!cookies.token) {
@@ -90,6 +89,7 @@ export const AuthProvider = ({ children }) => {
 			return;
 		}
 		const dataToken = await validToken(cookies.token);
+		// console.log(dataToken);
 		if (!dataToken) {
 			setIsAutheticated(false);
 			setLoading(false);
@@ -97,25 +97,23 @@ export const AuthProvider = ({ children }) => {
 		}
 		setLoading(false);
 		try {
-			const foundClient = await getClient(dataToken.data);
-			console.log(foundClient);
-			setUser(foundClient.data);
+			let foundUser = null;
+			if (dataToken.data.type === "client") {
+				foundUser = await getClient(dataToken.data);
+			} else if (dataToken.data.type === "service") {
+				foundUser = await getService(dataToken.data);
+			}
 
+			console.log(foundUser);
+			setUser(foundUser.data.data);
 			setIsAutheticated(true);
 			return;
 		} catch (error) {
 			console.log(error);
-			if (error.response.status == 404) {
-				const foundService = await getService(dataToken.data);
-				setIsAutheticated(true);
-				console.log(foundService);
-				setUser(foundService.data.data);
-				return;
-			}
 			setIsAutheticated(false);
 			setLoading(false);
 		}
-	}
+	};
 
 	useEffect(() => {
 		checkLogin();

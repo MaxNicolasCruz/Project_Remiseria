@@ -51,6 +51,10 @@ export const getService = () => instance.get(`/service/profile`);
 
 export const getClient = () => instance.get(`/client/profile`);
 
+export const getChatClient = () => instance.get(`/client/getChats`);
+
+export const getChatService = () => instance.get(`/service/getChats`);
+
 export const logout = () => instance.post(`/client/logout`);
 
 export const validToken = () => instance.get(`/validToken`);

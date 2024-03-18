@@ -8,6 +8,8 @@ import ProtectedRoute from "./ProtectedRoute";
 import Profile from "./pages/Profile";
 import Footer from "./components/common/Footer";
 import User from "./pages/User";
+import Chat from "./components/ui/Chat";
+import Chats from "./pages/Chats";
 
 function App() {
 	return (
@@ -15,17 +17,19 @@ function App() {
 			<BrowserRouter>
 				<div className="flex flex-col min-h-screen">
 					<Header />
-					<div className="flex-grow">
+					<main className="flex-grow">
 						<Routes>
 							<Route path="/" element={<Home />} />
+							<Route path="/user/chat" element={<Chat />} />
 							<Route path="/register" element={<Register />} />
 							<Route path="/login" element={<Login />} />
 							<Route element={<ProtectedRoute />}>
+								<Route path="/chats" element={<Chats />} />
 								<Route path="/profile" element={<Profile />} />
 								<Route path="/user/:id/:name" element={<User />} />
 							</Route>
 						</Routes>
-					</div>
+					</main>
 					<Footer />
 				</div>
 			</BrowserRouter>
