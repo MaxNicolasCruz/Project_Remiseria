@@ -44,6 +44,7 @@ function Chat({ user, chat, typeAccount }) {
 	// console.log(user);
 	// console.log(messages);
 	// console.log(client);
+	// console.log(user);
 	useEffect(() => {
 		setDataClient(client);
 	}, [client]);

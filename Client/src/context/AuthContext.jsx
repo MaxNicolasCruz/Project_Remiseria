@@ -9,6 +9,10 @@ import {
 	getService,
 } from "../api/auth";
 import Cookies from "js-cookie";
+import io from "socket.io-client";
+
+const socket = io("http://localhost:3000");
+
 export const AuthContext = createContext();
 
 export const useAuth = () => {
@@ -79,6 +83,10 @@ export const AuthProvider = ({ children }) => {
 		}
 	};
 
+	function socketAuth(token) {
+		socket.emit("authenticated", { token });
+		return;
+	}
 	const checkLogin = async () => {
 		const cookies = Cookies.get();
 
@@ -89,7 +97,7 @@ export const AuthProvider = ({ children }) => {
 			return;
 		}
 		const dataToken = await validToken(cookies.token);
-		// console.log(dataToken);
+		console.log(dataToken);
 		if (!dataToken) {
 			setIsAutheticated(false);
 			setLoading(false);
@@ -97,6 +105,7 @@ export const AuthProvider = ({ children }) => {
 		}
 		setLoading(false);
 		try {
+			socketAuth(dataToken.data);
 			let foundUser = null;
 			if (dataToken.data.type === "client") {
 				foundUser = await getClient(dataToken.data);

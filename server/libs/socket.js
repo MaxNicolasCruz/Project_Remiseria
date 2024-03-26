@@ -7,38 +7,38 @@ const userSocketMap = new Map();
 
 export function chat(socket) {
 	// Manejar la conexión de un nuevo usuario
-	socket.on("userConnected", (userId) => {
-		userSocketMap.set(userId, socket.id);
-		console.log(userId, socket.id);
-	});
+	socket.on("authenticated", ({ token }) => {
+		console.log("User connected:", socket.id);
+		// console.log(token);
 
-	socket.on("chat", async (bodyReceived) => {
-		// console.log(bodyReceived);
-
-		async function actualizarSocketIdEnBaseDeDatos(userId, userType, socketId) {
+		async function updateSocketInDataBase(userId, userType, socketId) {
 			// Aquí implementa la lógica para actualizar la columna socket_id en la base de datos.
 			// Puedes utilizar Sequelize o cualquier ORM que estés usando.
-			if (userType === "client") {
-				await Client.update({ socket_id: socketId }, { where: { id: userId } });
-			} else if (userType === "service") {
-				await Service.update(
-					{ socket_id: socketId },
-					{ where: { id: userId } }
-				);
+			try {
+				console.log(userType);
+				if (userType === "client") {
+					await Client.update(
+						{ socket_id: socketId },
+						{ where: { id: userId } }
+					);
+				} else if (userType === "service") {
+					await Service.update(
+						{ socket_id: socketId },
+						{ where: { id: userId } }
+					);
+				}
+				console.log("user register in data base");
+			} catch (error) {
+				console.log(error);
 			}
 		}
 
 		// Actualizar el socket.id en la base de datos cuando un usuario se conecta
-		// actualizarSocketIdEnBaseDeDatos(
-		// 	bodyReceived.from.id,
-		// 	bodyReceived.from.type,
-		// 	socket.id
-		// );
-		// actualizarSocketIdEnBaseDeDatos(
-		// 	bodyReceived.to.id,
-		// 	bodyReceived.to.type,
-		// 	socket.id
-		// );
+		updateSocketInDataBase(token.id, token.type, socket.id);
+	});
+
+	socket.on("chat", async (bodyReceived) => {
+		// console.log(bodyReceived);
 
 		let from = null;
 		let receiver = null;
@@ -70,10 +70,9 @@ export function chat(socket) {
 		}
 
 		// Obtener el ID de socket del receptor desde el mapeo
-		const receiverSocketId = userSocketMap.get(receiver.id);
-
-		if (receiverSocketId) {
-			socket.broadcast.emit("chat", {
+		console.log(receiver.socket_id);
+		try {
+			socket.to(receiver.socket_id).emit("chat", {
 				message: bodyReceived.message,
 				from: `${receiver.name} ${receiver.last_name}`,
 				sender: {
@@ -91,15 +90,12 @@ export function chat(socket) {
 					image: `http://localhost:3000/uploads/${receiver.image}`,
 				},
 			});
+		} catch (error) {
+			console.log(error);
 		}
 
-		// socket.emit("chat", {
-		// 	message: bodyReceived.message,
-		// 	from: `${receiver.name} ${receiver.last_name}`,
-		// });
-
 		socket.on("disconnect", () => {
-			console.log(`User ${userId} disconnected`);
+			console.log(`User  disconnected`);
 		});
 	});
 }

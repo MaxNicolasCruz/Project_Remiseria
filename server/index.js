@@ -3,7 +3,7 @@ import { sequelize } from "./database/database.js";
 import http from "http";
 import { Server as SocketServer } from "socket.io";
 import { chat } from "./libs/socket.js";
-import socketioAuth from "socketio-auth";
+// import socketioAuth from "socketio-auth";
 
 const server = http.createServer(app);
 const io = new SocketServer(server, {
@@ -12,22 +12,22 @@ const io = new SocketServer(server, {
 	},
 });
 
-socketioAuth(io, {
-	authenticate: async (socket, data, callback) => {
-		// Aquí puedes realizar la autenticación basada en el token o cualquier otro método que elijas
-		console.log(data.token);
-		const token = data.token; // Asume que el token se pasa como parte de los datos
+// socketioAuth(io, {
+// 	authenticate: async (socket, data, callback) => {
+// 		// Aquí puedes realizar la autenticación basada en el token o cualquier otro método que elijas
+// 		console.log(data.token);
+// 		const token = data.token; // Asume que el token se pasa como parte de los datos
 
-		// Realiza la autenticación según tu lógica y llama al callback con el resultado
-		const isAuthenticated = await authenticateUser(token);
+// 		// Realiza la autenticación según tu lógica y llama al callback con el resultado
+// 		const isAuthenticated = await authenticateUser(token);
 
-		if (isAuthenticated) {
-			return callback(null, true);
-		} else {
-			return callback(new Error("Authentication failed"));
-		}
-	},
-});
+// 		if (isAuthenticated) {
+// 			return callback(null, true);
+// 		} else {
+// 			return callback(new Error("Authentication failed"));
+// 		}
+// 	},
+// });
 
 io.on("connection", (socket, req, res) => {
 	chat(socket);

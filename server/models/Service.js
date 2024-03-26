@@ -65,6 +65,9 @@ export const Service = sequelize.define('Service', {
     state: {
         type: DataTypes.ENUM('En servicio','Fuera de Servicio','En Pedido')
     },
+    socket_id: {
+        type: DataTypes.STRING(200),
+    },
 }, {
     timestamps: false // Esta línea desactiva las columnas createdAt y updatedAt
 });

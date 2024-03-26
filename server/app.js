@@ -28,7 +28,7 @@ app.use("/uploads", express.static(path.join(__dirname, "./public/img")));
 app.use(methodOverride("_method"));
 app.use(express.json());
 app.use(cookieParser());
-app.use(morgan("dev"));
+// app.use(morgan("dev"));
 
 //routes
 app.use("/api/client", routeClient);

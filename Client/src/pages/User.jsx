@@ -7,14 +7,24 @@ import CardHistory from "../components/viewUser/CardHistory";
 import { FaCar } from "react-icons/fa";
 import { IoCall, IoChatbubbleEllipsesOutline } from "react-icons/io5";
 import Chat from "../components/ui/Chat";
+import { useAuth } from "../context/AuthContext";
 
-function User(props) {
+function User() {
+	const { user: client } = useAuth();
 	const [user, setUser] = useState(null);
 	const { id } = useParams();
 	const [typeAccount, setTypeAccount] = useState(false);
 	const [typeInfo, setInfo] = useState("info");
 	const [status, setStatus] = useState(false);
 	const [chat, setChat] = useState(false);
+
+
+	useEffect(() => {
+		if (client) {
+			setTypeAccount(Object.keys(client).length > 11 ? "service" : "client");
+			// console.log(client);
+		}
+	}, [client]);
 
 	useEffect(() => {
 		async function getUser() {
@@ -52,7 +62,6 @@ function User(props) {
 
 			setStatus(newClass);
 
-			setTypeAccount(Object.keys(user).length > 11 ? 'service' : 'client');
 		}
 	}, [user]);
 
