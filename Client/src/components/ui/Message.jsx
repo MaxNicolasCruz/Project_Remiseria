@@ -1,11 +1,9 @@
 import React from "react";
 
 function Message({ message, user }) {
-	// console.log(user);
-	// console.log(message);
 	return (
 		<div
-			className={`w-auto max-w-[80%] p-2 flex text-sm items-center h-auto  ${
+			className={` w-auto max-w-[80%] p-2 flex text-sm items-center h-auto  ${
 				message.from.name === "me" ? "flex-row-reverse float-end" : ""
 			} `}
 		>

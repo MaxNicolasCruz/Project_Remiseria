@@ -2,20 +2,35 @@ import { Chat } from "../models/Chat.js";
 import { Client } from "../models/Client.js";
 import { Service } from "../models/Service.js";
 
-// Mapeo de ID de usuario a ID de socket
-const userSocketMap = new Map();
+let onlineUser = [];
 
-export function chat(socket) {
-	// Manejar la conexión de un nuevo usuario
-	socket.on("authenticated", ({ token }) => {
+export function chat(socket, io) {
+	// Handling the connection of a new user
+
+	socket.on("authenticated", async (token) => {
 		console.log("User connected:", socket.id);
-		// console.log(token);
+
+		const existingUserIndex = onlineUser.findIndex(
+			(user) => user.id === token.id && user.type === token.type
+		);
+
+		if (existingUserIndex !== -1) {
+			// If the user already exists, update their socket ID
+			onlineUser[existingUserIndex].socketId = socket.id;
+			console.log("Usuario actualizado:", onlineUser[existingUserIndex]);
+		} else {
+			onlineUser.push({
+				...token,
+				socketId: socket.id,
+			});
+			console.log(
+				"Usuario agregado:",
+				onlineUser[onlineUser.length - 1].socketId
+			);
+		}
 
 		async function updateSocketInDataBase(userId, userType, socketId) {
-			// Aquí implementa la lógica para actualizar la columna socket_id en la base de datos.
-			// Puedes utilizar Sequelize o cualquier ORM que estés usando.
 			try {
-				console.log(userType);
 				if (userType === "client") {
 					await Client.update(
 						{ socket_id: socketId },
@@ -33,69 +48,73 @@ export function chat(socket) {
 			}
 		}
 
-		// Actualizar el socket.id en la base de datos cuando un usuario se conecta
+		// Update the socket.id in the database when a user connects
 		updateSocketInDataBase(token.id, token.type, socket.id);
 	});
-
-	socket.on("chat", async (bodyReceived) => {
-		// console.log(bodyReceived);
+	socket.on("chat", async ({ message }) => {
 
 		let from = null;
 		let receiver = null;
-		if (bodyReceived.from.type === "service") {
-			from = await Service.findByPk(bodyReceived.from.id);
+		if (message.from.type === "service") {
+			from = await Service.findByPk(message.from.id);
 		} else {
-			from = await Client.findByPk(bodyReceived.from.id);
+			from = await Client.findByPk(message.from.id);
 		}
 
-		if (bodyReceived.to.type === "client") {
-			receiver = await Client.findByPk(bodyReceived.to.id);
+		if (message.to.type === "client") {
+			receiver = await Client.findByPk(message.to.id);
 		} else {
-			receiver = await Service.findByPk(bodyReceived.to.id);
+			receiver = await Service.findByPk(message.to.id);
 		}
 
 		try {
 			let body = {
 				id_receiver: receiver.id,
 				id_sender: from.id,
-				sender_type: bodyReceived.from.type,
-				receiver_type: bodyReceived.to.type,
-				message: bodyReceived.message,
+				sender_type: message.from.type,
+				receiver_type: message.to.type,
+				message: message.message,
 				date: new Date(),
 			};
-			console.log(body);
 			Chat.create(body);
 		} catch (error) {
 			console.log(error);
 		}
 
-		// Obtener el ID de socket del receptor desde el mapeo
-		console.log(receiver.socket_id);
 		try {
-			socket.to(receiver.socket_id).emit("chat", {
-				message: bodyReceived.message,
-				from: `${receiver.name} ${receiver.last_name}`,
-				sender: {
-					id: bodyReceived.id_sender,
-					name: from.name,
-					lastName: from.last_name,
-					type: bodyReceived.sender_type,
-					image: `http://localhost:3000/uploads/${from.image}`,
-				},
-				receiver: {
-					id: bodyReceived.id_receiver,
-					name: receiver.name,
-					lastName: receiver.last_name,
-					type: bodyReceived.receiver_type,
-					image: `http://localhost:3000/uploads/${receiver.image}`,
-				},
-			});
+			// send in real time
+			function sendRealTime(to) {
+				io.to(user.socketId).emit("getMessage", {
+					message: message.message,
+					from: `${receiver.name} ${receiver.last_name}`,
+					sender: {
+						id: from.id,
+						name: from.name,
+						lastName: from.last_name,
+						type: message.from.type,
+						image: `http://localhost:3000/uploads/${from.image}`,
+					},
+					receiver: {
+						id: receiver.id,
+						name: receiver.name,
+						lastName: receiver.last_name,
+						type: message.to.type,
+						image: `http://localhost:3000/uploads/${receiver.image}`,
+					},
+				});
+			}
+
+			const user = onlineUser.find((user) => user.email === message.to.email);
+			if (user) {
+				sendRealTime(user.socketId);
+			}
 		} catch (error) {
 			console.log(error);
 		}
+	});
 
-		socket.on("disconnect", () => {
-			console.log(`User  disconnected`);
-		});
+	socket.on("disconnect", () => {
+		console.log(`User  disconnected`);
+		onlineUser = onlineUser.filter((user) => user.socketId !== socket.id);
 	});
 }

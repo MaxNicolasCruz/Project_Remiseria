@@ -8,6 +8,7 @@ import { FaCar } from "react-icons/fa";
 import { IoCall, IoChatbubbleEllipsesOutline } from "react-icons/io5";
 import Chat from "../components/ui/Chat";
 import { useAuth } from "../context/AuthContext";
+import Avatar from "@mui/material/Avatar";
 
 function User() {
 	const { user: client } = useAuth();
@@ -18,11 +19,9 @@ function User() {
 	const [status, setStatus] = useState(false);
 	const [chat, setChat] = useState(false);
 
-
 	useEffect(() => {
 		if (client) {
 			setTypeAccount(Object.keys(client).length > 11 ? "service" : "client");
-			// console.log(client);
 		}
 	}, [client]);
 
@@ -34,14 +33,12 @@ function User() {
 				const age = new Date().getFullYear() - dateOfBirth.getFullYear();
 				res.data.data.formattedUser.dateOfBirth = age;
 				setUser(res.data.data.formattedUser);
-				
 			} catch (error) {
 				console.log(error);
 			}
 		}
 		getUser();
 	}, []);
-	// console.log(user);
 	useEffect(() => {
 		if (user) {
 			let newClass = "";
@@ -61,7 +58,6 @@ function User() {
 			}
 
 			setStatus(newClass);
-
 		}
 	}, [user]);
 
@@ -70,12 +66,13 @@ function User() {
 			{user ? (
 				<>
 					<section className="lg:flex lg:items-center lg:justify-center cursor-default">
-						<div className="flex flex-col items-center lg:flex-row lg:w-2/5 lg:justify-center">
-							<div className="w-3/6 h-full flex justify-center lg">
-								<img
-									src={user?.image}
-									alt="foto del usuario"
-									className="rounded-full"
+						<div className="flex flex-col items-center lg:flex-row lg:w-2/5 lg:justify-center ">
+							<div className="w-3/6 h-full flex justify-center ">
+								<Avatar
+									alt="Image User"
+									src={user.image}
+									sx={{ width: 156, height: 156 }}
+									className="m-auto"
 								/>
 							</div>
 							<div className="flex flex-col items-center lg:items-start pl-2 ">
@@ -180,7 +177,10 @@ function User() {
 					</section>
 					{chat && (
 						<>
-							<Chat user={{...user,type:'service'}} typeAccount={typeAccount}></Chat>
+							<Chat
+								user={{ ...user, type: "service" }}
+								typeAccount={typeAccount}
+							></Chat>
 						</>
 					)}
 				</>

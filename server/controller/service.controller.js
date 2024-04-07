@@ -355,7 +355,7 @@ const userMethod = {
 
 			for (const chat of chats) {
 				const otherUser =
-					chat.id_sender === user.id && chat.sender_type === 'service'
+					chat.id_sender === user.id && chat.sender_type === "service"
 						? { id: chat.id_receiver, typeReceiver: chat.receiver_type }
 						: { id: chat.id_sender, typeSender: chat.sender_type };
 				if (!groupedChats[otherUser.id]) {
@@ -379,12 +379,21 @@ const userMethod = {
 						id: id,
 						name: isSender ? user.name : userData.name,
 						lastName: isSender ? user.last_name : userData.last_name,
-						type: isSender ? "service" : otherUser.typeSender? otherUser.typeSender : otherUser.typeReceiver,
-						image: isSender ? `http://localhost:3000/uploads/${user.image}` : `http://localhost:3000/uploads/${userData.image}`,
+						email: isSender ? user.email : userData.email,
+
+						type: isSender
+							? "service"
+							: otherUser.typeSender
+							? otherUser.typeSender
+							: otherUser.typeReceiver,
+						image: isSender
+							? `http://localhost:3000/uploads/${user.image}`
+							: `http://localhost:3000/uploads/${userData.image}`,
 					};
 				};
 				if (otherUserData) {
-					const isSender = chat.id_sender === user.id && chat.sender_type === 'service';
+					const isSender =
+						chat.id_sender === user.id && chat.sender_type === "service";
 					groupedChats[otherUser.id].push({
 						id: chat.id,
 						message: chat.message,
@@ -396,7 +405,6 @@ const userMethod = {
 						),
 						date: chat.date,
 					});
-					
 				}
 			}
 

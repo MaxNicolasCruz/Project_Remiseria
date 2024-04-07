@@ -14,7 +14,7 @@ router.get("/", async (req, res) => {
 		const { id, email, type } = user;
 
 		let foundUser = null;
-		console.log(user);
+		
 		if (type === "client") {
 			foundUser = await Client.findOne({
 				where: {

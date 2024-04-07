@@ -8,6 +8,7 @@ import { getProvices } from "../api/provinceApi";
 import { updateClientRequest, updateServiceRequest } from "../api/auth";
 import Alert from "../components/ui/alert";
 import { RiLoader2Fill } from "react-icons/ri";
+import Avatar from "@mui/material/Avatar";
 
 function Profile() {
 	const { isAutheticated, user } = useAuth();
@@ -139,7 +140,6 @@ function Profile() {
 		}
 	}
 	const timeLoad = () => {
-		// Esperar 2 segundos antes de cambiar el estado a false
 		setTimeout(() => {
 			setLoad(false);
 		}, 500);
@@ -151,14 +151,13 @@ function Profile() {
 				<div className="conteinerCard-profile">
 					{!load ? (
 						<>
-							<div className="h-44 w-full max-w-[185px] text-center relative">
-								<div className=" bg-gray-800 w-24 h-24 transform-rombo absolute left-[45px] top-[40px] overflow-hidden shadow-common">
-									<img
-										src={user.image}
-										alt="user picture"
-										className="-rotate-45 ml-[8px] scale-[1.15] "
-									/>
-								</div>
+							<div className="h-44 w-full max-w-[185px] text-center relative mt-3 ">
+								<Avatar
+									alt="Image User"
+									src={user.image}
+									sx={{ width: 156, height: 156 }}
+									className="m-auto"
+								/>
 							</div>
 							<div>
 								<form

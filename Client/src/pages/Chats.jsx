@@ -10,15 +10,12 @@ function Chats() {
 	const [dataClient, setDataClient] = useState(null);
 	const [chats, setChats] = useState([]);
 	const [showChat, setShowChat] = useState(false);
-
 	useEffect(() => {
 		if (client) {
 			setTypeAccount(Object.keys(client).length > 11 ? "service" : "client");
 			setDataClient(client);
-			// console.log(client);
 		}
 	}, [client]);
-	// console.log(chats);
 	useEffect(() => {
 		let res = [];
 		async function getChat() {

@@ -9,9 +9,7 @@ import {
 	getService,
 } from "../api/auth";
 import Cookies from "js-cookie";
-import io from "socket.io-client";
-
-const socket = io("http://localhost:3000");
+import { ChatContextProvider } from "./ChatContext";
 
 export const AuthContext = createContext();
 
@@ -25,7 +23,7 @@ export const useAuth = () => {
 
 export const AuthProvider = ({ children }) => {
 	const [user, setUser] = useState(false);
-	const [isAutheticated, setIsAutheticated] = useState(true);
+	const [isAutheticated, setIsAutheticated] = useState(false);
 	const [errors, setErrors] = useState([]);
 	const [loading, setLoading] = useState(true);
 
@@ -83,10 +81,6 @@ export const AuthProvider = ({ children }) => {
 		}
 	};
 
-	function socketAuth(token) {
-		socket.emit("authenticated", { token });
-		return;
-	}
 	const checkLogin = async () => {
 		const cookies = Cookies.get();
 
@@ -97,7 +91,6 @@ export const AuthProvider = ({ children }) => {
 			return;
 		}
 		const dataToken = await validToken(cookies.token);
-		console.log(dataToken);
 		if (!dataToken) {
 			setIsAutheticated(false);
 			setLoading(false);
@@ -105,7 +98,6 @@ export const AuthProvider = ({ children }) => {
 		}
 		setLoading(false);
 		try {
-			socketAuth(dataToken.data);
 			let foundUser = null;
 			if (dataToken.data.type === "client") {
 				foundUser = await getClient(dataToken.data);
@@ -113,7 +105,6 @@ export const AuthProvider = ({ children }) => {
 				foundUser = await getService(dataToken.data);
 			}
 
-			console.log(foundUser);
 			setUser(foundUser.data.data);
 			setIsAutheticated(true);
 			return;
@@ -131,7 +122,7 @@ export const AuthProvider = ({ children }) => {
 		<AuthContext.Provider
 			value={{ signup, signin, user, errors, isAutheticated, loading }}
 		>
-			{children}
+			<ChatContextProvider user={user}>{children}</ChatContextProvider>
 		</AuthContext.Provider>
 	);
 };

@@ -7,7 +7,8 @@ import { useAuth } from "../context/AuthContext";
 function Home() {
 	const [slideOn, setSlideOn] = useState(false);
 	const [users, setUsers] = useState([]);
-	const [ autheticated, setAutheticated] = useState(null);
+	const [autheticated, setAutheticated] = useState(null);
+
 	const { isAutheticated, user } = useAuth();
 	function openSlide() {
 		setSlideOn(!slideOn);
@@ -15,16 +16,25 @@ function Home() {
 	useEffect(() => {
 		const getUsers = async () => {
 			try {
-				const res = await getAllServiceRequest();
-				setUsers(res.data.data);
+				let res = await getAllServiceRequest();
+				if (user) {
+					res = res.data.data.filter((userInline) => {
+						return userInline.id !== user.id && userInline.email !== user.email;
+					});
+
+					setUsers(res);
+				} else {
+					setUsers(res.data.data);
+				}
 			} catch (error) {
 				console.log(error);
 			}
 		};
 		getUsers();
 	}, []);
+
 	useEffect(() => {
-			setAutheticated(isAutheticated)
+		setAutheticated(isAutheticated);
 	}, [isAutheticated]);
 	return (
 		<>
@@ -62,7 +72,7 @@ function Home() {
 									<h2 className="cursor-default">Menu</h2>
 									<div className="hidden w-28 h-28 ml-auto mr-auto lg:block">
 										<img
-											src={user ? user.image : 'undefined'}
+											src={user ? user.image : "undefined"}
 											alt="goku"
 											className="w-full h-full rounded-full"
 										/>
@@ -86,7 +96,7 @@ function Home() {
 								<>
 									<h2 className="font-bold">Log in to see</h2>
 									<div className="flex justify-center">
-										<Link to={'/login'}>
+										<Link to={"/login"}>
 											<svg
 												xmlns="http://www.w3.org/2000/svg"
 												fill="none"

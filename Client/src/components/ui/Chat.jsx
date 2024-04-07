@@ -1,13 +1,14 @@
 import React, { useEffect, useRef, useState } from "react";
-import io from "socket.io-client";
 import { IoMdArrowDropupCircle } from "react-icons/io";
 import { BsSend } from "react-icons/bs";
 import { useAuth } from "../../context/AuthContext";
 import Message from "./Message";
-const socket = io("http://localhost:3000");
+import { ChatContextProvider, useChat } from "../../context/ChatContext";
 
 function Chat({ user, chat, typeAccount }) {
 	const { user: client } = useAuth();
+	const { sendMessage, receiverMessage, newUserOnline, socket } =
+		useChat(client);
 	const messagesEndRef = useRef(null);
 	const [message, setMessage] = useState("");
 	const [messages, setMessages] = useState([]);
@@ -18,16 +19,27 @@ function Chat({ user, chat, typeAccount }) {
 		let newMessage = {
 			message: message,
 			from: { name: "me", image: client.image },
+			to: { name: user.name, image: user.image },
 		};
 		setMessages([...messages, newMessage]);
-		socket.emit("chat", {
+
+		newUserOnline(socket);
+
+		sendMessage({
 			message: message,
-			from: { id: client.id, type: typeAccount },
+			from: {
+				id: client.id,
+				type: typeAccount,
+				email: client.email,
+				socketId: socket.id,
+			},
 			to: {
 				id: user.id,
 				type: user.type,
+				email: user.email,
 			},
 		});
+
 		setMessage("");
 	};
 
@@ -39,12 +51,7 @@ function Chat({ user, chat, typeAccount }) {
 			});
 		}
 	}, [chat, typeAccount]);
-	// console.log(user);
-	// console.log(chat);
-	// console.log(user);
-	// console.log(messages);
-	// console.log(client);
-	// console.log(user);
+
 	useEffect(() => {
 		setDataClient(client);
 	}, [client]);
@@ -57,21 +64,29 @@ function Chat({ user, chat, typeAccount }) {
 	}, [messages]);
 
 	useEffect(() => {
-		socket.on("chat", (message) => {
-			console.log(message);
-			receiveMessage(message)
+		if (!user) return;
+		if (socket === null) return;
+		socket.on("getMessage", (message) => {
+			let isBelongChat =
+				(message.sender.id === user.id && message.sender.type === user.type) ||
+				(message.receiver.id === user.id &&
+					message.receiver.type === user.type);
+
+			if (isBelongChat) {
+				receiveMessage(message);
+			}
 		});
 		return () => {
-			socket.off("chat", receiveMessage);
+			socket.off("getMessage");
 		};
-	}, []);
+	}, [socket]);
 
 	const receiveMessage = (newMessage) => {
 		let isSender =
 			client.id === newMessage.sender.id &&
 			newMessage.sender.type === typeAccount;
 
-
+		//Aqui haz tu
 		setMessages((prevMessages) => [
 			...prevMessages,
 			{
@@ -81,6 +96,7 @@ function Chat({ user, chat, typeAccount }) {
 					name: isSender ? "me" : newMessage.sender.name,
 					image: isSender ? newMessage.sender.image : newMessage.receiver.image,
 				},
+				to: { name: user.name, image: user.image },
 			},
 		]);
 	};
@@ -115,6 +131,11 @@ function Chat({ user, chat, typeAccount }) {
 			>
 				<div
 					className="flex flex-col overflow-y-auto max-h-[80%] mb-12"
+					style={{
+						scrollbarColor: "rgb(77 77 74) rgb(0 0 0 / 0%)",
+						scrollbarGutter: "auto",
+						scrollbarWidth: "thin",
+					}}
 					ref={messagesEndRef}
 				>
 					{messages.map((messageSingle, i) => (
