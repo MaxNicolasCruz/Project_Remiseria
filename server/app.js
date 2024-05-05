@@ -10,6 +10,8 @@ import cors from "cors";
 import routeClient from "./routers/clients.router.js";
 import routeService from "./routers/services.router.js";
 import routeToken from "./routers/validToken.js";
+import routeOrder from "./routers/order.router.js";
+
 
 const app = express();
 
@@ -34,5 +36,6 @@ app.use(cookieParser());
 app.use("/api/client", routeClient);
 app.use("/api/service", routeService);
 app.use("/api/validToken", routeToken);
+app.use("/api/order", routeOrder);
 
 export default app;

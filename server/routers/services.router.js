@@ -27,5 +27,7 @@ router.get("/profile", authRequired, methodServices.profile);
 router.get("/user/:id", authRequired, methodServices.getUser);
 router.get("/getUsers", methodServices.getAllUser);
 router.get("/getChats", authRequired, methodServices.getAllChats);
+router.get("/getOrder", authRequired, methodServices.getOrder);
+
 
 export default router;

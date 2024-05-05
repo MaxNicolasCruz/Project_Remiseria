@@ -8,6 +8,7 @@ function Header() {
 
 	function logoutFc() {
 		logout().then((res) => {
+			console.log(res);
 			window.location.reload();
 		});
 	}
@@ -96,7 +97,13 @@ function Header() {
 				</ul>
 				<div className="mb-2 mt-2">
 					{isAutheticated ? (
-						<Button onClick={logoutFc}>Logout</Button>
+						<Button
+							onClick={() => {
+								logoutFc();
+							}}
+						>
+							Logout
+						</Button>
 					) : (
 						<>
 							<Link to={"/login"}>

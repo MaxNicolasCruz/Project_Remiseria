@@ -1,6 +1,7 @@
 import { Chat } from "../models/Chat.js";
 import { Client } from "../models/Client.js";
 import { Service } from "../models/Service.js";
+import { Order } from "../models/Order.js";
 
 let onlineUser = [];
 
@@ -52,7 +53,6 @@ export function chat(socket, io) {
 		updateSocketInDataBase(token.id, token.type, socket.id);
 	});
 	socket.on("chat", async ({ message }) => {
-
 		let from = null;
 		let receiver = null;
 		if (message.from.type === "service") {
@@ -108,6 +108,56 @@ export function chat(socket, io) {
 			if (user) {
 				sendRealTime(user.socketId);
 			}
+		} catch (error) {
+			console.log(error);
+		}
+	});
+
+	//handling for orders change
+
+	socket.on("changeOrder", async ({ data }) => {
+		try {
+			await Order.update(
+				{
+					status: data.status,
+				},
+				{
+					where: {
+						id: data.id,
+					},
+				}
+			);
+
+			socket.emit("changeOrderDone", "successful");
+		} catch (error) {
+			console.log(error);
+		}
+	});
+
+	socket.on("doneOrder", async ({ data }) => {
+		try {
+			await Order.update(
+				{
+					status: "Realizada",
+				},
+				{
+					where: {
+						id: data.id,
+					},
+				}
+			);
+
+			socket.emit("changeOrderDone", "successful");
+		} catch (error) {
+			console.log(error);
+		}
+	});
+
+	socket.on("notification", async (data) => {
+		try {
+			let res = await Service.findByPk(data.id);
+
+			io.to(res.socket_id).emit("notification", "newOrder");
 		} catch (error) {
 			console.log(error);
 		}

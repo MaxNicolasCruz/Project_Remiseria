@@ -10,6 +10,7 @@ import Footer from "./components/common/Footer";
 import User from "./pages/User";
 import Chat from "./components/ui/Chat";
 import Chats from "./pages/Chats";
+import Orders from "./pages/Orders";
 
 function App() {
 	return (
@@ -26,6 +27,7 @@ function App() {
 							<Route element={<ProtectedRoute />}>
 								<Route path="/chats" element={<Chats />} />
 								<Route path="/profile" element={<Profile />} />
+								<Route path="/order" element={<Orders />} />
 								<Route path="/user/:id/:name" element={<User />} />
 							</Route>
 						</Routes>

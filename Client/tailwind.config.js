@@ -10,6 +10,8 @@ export default {
       yellowPrimary: '#f1f100'
     }},
   },
-  plugins: [],
+  plugins: [
+    require('tailwindcss-animated')
+  ],
 }
 

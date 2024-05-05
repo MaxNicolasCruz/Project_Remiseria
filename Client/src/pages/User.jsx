@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { getUserService } from "../api/auth";
+import { getUserService, sendOrder } from "../api/auth";
 import { useParams } from "react-router-dom";
 import CardInfo from "../components/viewUser/CardInfo";
 import CardReview from "../components/viewUser/CardReview";
@@ -9,6 +9,9 @@ import { IoCall, IoChatbubbleEllipsesOutline } from "react-icons/io5";
 import Chat from "../components/ui/Chat";
 import { useAuth } from "../context/AuthContext";
 import Avatar from "@mui/material/Avatar";
+import Alert from "../components/ui/alert";
+import { useChat } from "../context/ChatContext";
+import { differenceInYears } from "date-fns";
 
 function User() {
 	const { user: client } = useAuth();
@@ -17,7 +20,10 @@ function User() {
 	const [typeAccount, setTypeAccount] = useState(false);
 	const [typeInfo, setInfo] = useState("info");
 	const [status, setStatus] = useState(false);
+	const [state, setState] = useState(false);
 	const [chat, setChat] = useState(false);
+	const [calling, setCalling] = useState(false);
+	const { socket } = useChat(user);
 
 	useEffect(() => {
 		if (client) {
@@ -29,9 +35,10 @@ function User() {
 		async function getUser() {
 			try {
 				const res = await getUserService(id);
-				const dateOfBirth = new Date(res.data.data.formattedUser.dateOfBirth);
-				const age = new Date().getFullYear() - dateOfBirth.getFullYear();
-				res.data.data.formattedUser.dateOfBirth = age;
+				res.data.data.formattedUser.dateOfBirth = differenceInYears(
+					new Date(),
+					new Date(res.data.data.formattedUser.dateOfBirth)
+				);
 				setUser(res.data.data.formattedUser);
 			} catch (error) {
 				console.log(error);
@@ -39,23 +46,53 @@ function User() {
 		}
 		getUser();
 	}, []);
+
+	function askForOrder() {
+		if (user.state == "En servicio" || user.state == "En Pedido") {
+			let data = { typeAccount: typeAccount, id: user.id };
+			try {
+				sendOrder(data);
+				socket.emit("notification", { id: user.id, typeAccount: "Service" });
+			} catch (error) {
+				setState("hubo errores en el envio, intentelo mas tarde");
+
+				setStatus({ bg: "bg-red-600", text: "text-red-500" });
+				console.log(error);
+			}
+		}
+
+		setCalling(true);
+
+		const timer = setTimeout(() => {
+			setCalling(false);
+		}, 5000);
+		return () => clearTimeout(timer);
+	}
+
 	useEffect(() => {
 		if (user) {
 			let newClass = "";
-
+			let newState = "";
 			switch (user.state) {
 				case "En servicio":
 					newClass = { bg: "bg-green-400", text: "text-green-400" };
+					newState = "Su pedido esta siendo recibido por favor espere";
+
 					break;
 				case "Fuera de Servicio":
 					newClass = { bg: "bg-red-600", text: "text-red-500" };
+					newState = "El servicio no esta disponible";
 					break;
 				case "En Pedido":
 					newClass = { bg: "bg-orange-500", text: "text-orange-500" };
+					newState = "El servicio Esta ocupado pero fue enviada su podido";
+
 					break;
 				default:
 					break;
 			}
+
+			setState(newState);
 
 			setStatus(newClass);
 		}
@@ -113,7 +150,13 @@ function User() {
 										<IoCall fontSize={22} className="cursor-pointer " />
 									</div>
 									<div className="bg-yellowPrimary scale-150 rounded-full p-1 hover:bg-[#5d5e5c] hover:text-white transition">
-										<FaCar fontSize={22} className="cursor-pointer " />
+										<FaCar
+											fontSize={22}
+											className="cursor-pointer "
+											onClick={() => {
+												askForOrder();
+											}}
+										/>
 									</div>
 								</div>
 							</div>
@@ -171,7 +214,11 @@ function User() {
 								<IoCall />
 							</div>
 							<div className="bg-yellowPrimary scale-150 rounded-full p-1">
-								<FaCar />
+								<FaCar
+									onClick={() => {
+										askForOrder();
+									}}
+								/>
 							</div>
 						</div>
 					</section>
@@ -183,6 +230,7 @@ function User() {
 							></Chat>
 						</>
 					)}
+					{calling && <Alert message={state} color={status.bg} />}
 				</>
 			) : (
 				<p>Loading...</p>

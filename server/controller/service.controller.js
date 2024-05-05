@@ -6,8 +6,9 @@ import { Order } from "../models/Order.js";
 import { Client } from "../models/Client.js";
 import { imgDelete } from "../middleware/deleteImg.js";
 import { Chat } from "../models/Chat.js";
-import { Op } from "sequelize";
-
+import { Op, or } from "sequelize";
+import jwt from "jsonwebtoken";
+import { TOKEN_SECRET } from "../config.js";
 import bcrypt from "bcryptjs";
 
 const userMethod = {
@@ -154,13 +155,7 @@ const userMethod = {
 			res.status(500).json({ message: "internal server error" });
 		}
 	},
-	deleteUser: (req, res) => {
-		// Client.destroy({
-		//     where: {
-		//         id:
-		//     }
-		// })
-	},
+	deleteUser: (req, res) => {},
 	profile: async (req, res) => {
 		const serviceFound = await Service.findOne({
 			where: {
@@ -263,7 +258,7 @@ const userMethod = {
 		});
 		if (!serviceFound)
 			return res.status(404).json({ message: "User Not Found" });
-		// return res.json(serviceFound)
+
 		let rating = serviceFound.Comments.reduce((sum, comment) => {
 			return sum + comment.rating;
 		}, 0);
@@ -297,7 +292,7 @@ const userMethod = {
 		});
 	},
 	getAllUser: async (req, res) => {
-		const allUser = await Service.findAll({
+		let allUser = await Service.findAll({
 			attributes: { exclude: ["password", "number_document"] },
 			include: [
 				{
@@ -307,6 +302,23 @@ const userMethod = {
 				},
 			],
 		});
+
+		const { token } = req.cookies;
+
+		if (token) {
+			jwt.verify(token, TOKEN_SECRET, (err, user) => {
+				if (err) {
+					console.log("error", err);
+				}
+				req.user = user;
+			});
+		}
+
+		if (req?.user) {
+			allUser = allUser.filter((user) => {
+				return req.user.id !== user.id || req.user.email !== user.email;
+			});
+		}
 
 		const formattedUsers = allUser.map((user) => ({
 			id: user.id,
@@ -329,7 +341,7 @@ const userMethod = {
 		}));
 
 		res.json({
-			data: formattedUsers,
+			data: [...formattedUsers],
 			metadata: {
 				totalCount: formattedUsers.length,
 				timestamp: new Date(),
@@ -418,6 +430,142 @@ const userMethod = {
 		} catch (error) {
 			console.log(error);
 			return res.status(500).json({ message: "error internal server" });
+		}
+	},
+	getOrder: async (req, res) => {
+		if (!req.user) return res.status(401).json({ message: "User not found" });
+		try {
+			let orders = await Order.findAll({
+				where: {
+					[Op.or]: [
+						{ id_client: req.user.id, type_client: req.user.type },
+						{ id_service: req.user.id },
+					],
+				},
+				order: [["date", "DESC"]],
+			});
+
+			let data = {
+				pending: [],
+				waiting: [],
+				agreed: [],
+				rejected: [],
+				done: [],
+			};
+			for (const order of orders) {
+				let user;
+				if (order.type_client === "Service") {
+					user = await Service.findOne({
+						where: {
+							id: order.id_client,
+						},
+						include: [
+							{
+								model: Timetable,
+								as: "timetableUser",
+								attributes: ["id", "timetable"],
+							},
+							{
+								model: Order,
+								attributes: ["id", "date", "method_pay", "status"],
+								include: [
+									{
+										model: Client,
+										attributes: ["name", "last_name"],
+									},
+									{
+										model: Service,
+										attributes: ["name", "last_name"],
+									},
+								],
+							},
+							{
+								model: Comment,
+								attributes: ["id", "comment", "rating"],
+								include: [
+									{
+										model: Client,
+										attributes: ["name", "last_name"],
+									},
+									{
+										model: Service,
+										attributes: ["name", "last_name"],
+									},
+								],
+							},
+						],
+					});
+
+					if (!user) return res.status(404).json({ message: "User Not Found" });
+
+					let rating = user.Comments.reduce((sum, comment) => {
+						return sum + comment.rating;
+					}, 0);
+					user = {
+						id: user.id,
+						email: user.email,
+						name: user.name,
+						lastName: user.last_name,
+						genre: user.genre,
+						dateOfBirth: user.date_of_birth,
+						city: user.city,
+						country: user.country,
+						numberPhone: user.number_phone,
+						image: `http://localhost:3000/uploads/${user.image}`,
+						description: user.description,
+						rating: rating
+					};
+				} else {
+					user = await Client.findByPk(order.id_client);
+
+					user = {
+						id: user.id,
+						email: user.email,
+						name: user.name,
+						lastName: user.last_name,
+						genre: user.genre,
+						dateOfBirth: user.date_of_birth,
+						city: user.city,
+						country: user.country,
+						numberPhone: user.number_phone,
+						numberDocument: user.number_document,
+						image: `http://localhost:3000/uploads/${user.image}`,
+					};
+				}
+
+				order.id_client = user;
+
+				switch (order.status) {
+					case "Enviada":
+						data.pending.push(order);
+						break;
+					case "En espera":
+						data.waiting.push(order);
+						break;
+					case "Aceptada":
+						data.agreed.push(order);
+						break;
+					case "Rechazada":
+						data.rejected.push(order);
+						break;
+					case "Realizada":
+						data.done.push(order);
+						break;
+					default:
+						break;
+				}
+			}
+
+			res.status(200).json({
+				data,
+				metadata: {
+					totalCount: Object.keys(data).length,
+					timestamp: new Date(),
+				},
+			});
+		} catch (error) {
+			console.log(error);
+			res.status(500).json({ message: "internal server error" });
 		}
 	},
 };

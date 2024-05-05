@@ -1,7 +1,7 @@
 import { createToken } from "../libs/jwt.js";
 import { Client } from "../models/Client.js";
 import { Service } from "../models/Service.js";
-
+import { Order } from "../models/Order.js";
 import { Chat } from "../models/Chat.js";
 import { Op } from "sequelize";
 
@@ -88,16 +88,10 @@ const userMethod = {
 		}
 	},
 	logout: async (req, res) => {
-		try {
-			res.cookie("token", "", {
-				expire: new Date(0),
-			});
-
-			return res.sendStatus(200);
-		} catch (error) {
-			console.log(error);
-			return res.status(500).json({ message: "internal server error" });
-		}
+		res.cookie("token", "", {
+			expire: new Date(0),
+		});
+		return res.sendStatus(200);
 	},
 	updateUser: async (req, res) => {
 		const { name, lastName, city, country, numberPhone, description } =
@@ -130,17 +124,12 @@ const userMethod = {
 		res.status(200).json({ message: "update correct" });
 	},
 	deleteUser: (req, res) => {
-		// Client.destroy({
-		//     where: {
-		//         id:
-		//     }
-		// })
 	},
 	getUser: async (req, res) => {
 		const userFound = await Client.findOne({
 			where: {
 				id: req.user.id,
-				email: req.user.email, // Agrega la condición para el campo email
+				email: req.user.email, 
 			},
 		});
 
@@ -282,6 +271,90 @@ const userMethod = {
 		} catch (error) {
 			console.log(error);
 			return res.status(500).json({ message: "error internal server" });
+		}
+	},
+	getOrder: async (req, res) => {
+		if (!req.user) return res.status(401).json({ message: "User not found" });
+		try {
+			let orders = await Order.findAll({
+				where: {
+					id_client: req.user.id,
+					type_client: req.user.type,
+				},
+
+				order: [["date", "DESC"]],
+			});
+
+			let data = {
+				pending: [],
+				waiting: [],
+				agreed: [],
+				rejected: [],
+				done: [],
+			};
+
+			for (const order of orders) {
+				let user;
+				if (order.type_client === "Client") {
+					user = await Service.findOne({
+						where: {
+							id: order.id_service,
+						},
+					});
+
+					if (!user) return res.status(404).json({ message: "User Not Found" });
+
+					user = {
+						id: user.id,
+						email: user.email,
+						name: user.name,
+						lastName: user.last_name,
+						genre: user.genre,
+						dateOfBirth: user.date_of_birth,
+						city: user.city,
+						country: user.country,
+						numberPhone: user.number_phone,
+						numberDocument: user.number_document,
+						image: `http://localhost:3000/uploads/${user.image}`,
+					};
+				}
+
+				order.id_client = user;
+				switch (order.status) {
+					case "Enviada":
+						data.pending.push(order);
+						break;
+
+					case "En espera":
+						data.waiting.push(order);
+						break;
+
+					case "Aceptada":
+						data.agreed.push(order);
+						break;
+
+					case "Rechazada":
+						data.rejected.push(order);
+						break;
+
+					case "Realizada":
+						data.done.push(order);
+						break;
+					default:
+						break;
+				}
+			}
+
+			res.status(200).json({
+				data,
+				metadata: {
+					totalCount: Object.keys(data).length,
+					timestamp: new Date(),
+				},
+			});
+		} catch (error) {
+			console.log(error);
+			res.status(500).json({ message: "internal server error" });
 		}
 	},
 };
