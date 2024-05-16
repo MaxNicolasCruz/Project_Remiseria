@@ -28,10 +28,10 @@ function Login() {
 	}, [isAutheticated]);
 
 	return (
-		<div className="container-form text-center">
+		<div className="container-form text-center mb-2">
 			<h2 className="font-bold text-2xl cursor-default">Login</h2>
-			<form className="  pl-[5%] sm:pl-0 text-center" onSubmit={onSubmit}>
-				<div>
+			<form className="  pl-[5%] sm:pl-0 text-center flex flex-col items-center" onSubmit={onSubmit}>
+				<div className="w-1/2">
 					<Label htmlFor="email">Email</Label>
 					<Input
 						type="email"
@@ -49,7 +49,7 @@ function Login() {
 						<span className="msg-error">{errors.email.message}</span>
 					)}
 				</div>
-				<div>
+				<div className="w-1/2">
 					<Label htmlFor="password">Password</Label>
 					<Input
 						type="password"

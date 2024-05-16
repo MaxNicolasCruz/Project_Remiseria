@@ -6,25 +6,25 @@ import { FaXTwitter } from "react-icons/fa6";
 function Footer() {
 	let enlaces = [
 		{
-			title: "Compañía",
+			title: "Agency",
 			links: [
-				{ to: "/sobre-nosotros", label: "Sobre Nosotros" },
-				{ to: "/politica-privacidad", label: "Política de Privacidad" },
-				{ to: "/terminos-condiciones", label: "Términos y Condiciones" },
-				{ to: "/afiliacion", label: "Afiliación" },
+				{ to: "/about-us", label: "About Us" },
+				{ to: "/policy-privacy", label: "Policy & Privacy" },
+				{ to: "/terms-and-conditions", label: "Terms and Conditions" },
+				{ to: "/affiliation", label: "Affiliation" },
 			],
 		},
 		{
-			title: "Navegacion",
+			title: "Navigate",
 			links: [
-				{ to: "/", label: "Inicio" },
-				{ to: "/login", label: "Iniciar Session" },
-				{ to: "/register", label: "Registrarse" },
-				{ to: "/profile", label: "Perfil" },
+				{ to: "/", label: "Home" },
+				{ to: "/login", label: "Logn" },
+				{ to: "/register", label: "Register" },
+				{ to: "/profile", label: "Profile" },
 			],
 		},
 		{
-			title: "Redes Sociales",
+			title: "Social networks",
 			links: [
 				{ to: "/facebok", label: <FaFacebook /> },
 				{ to: "/instagram", label: <FaInstagram /> },
@@ -40,28 +40,28 @@ function Footer() {
 				<LinksFooter props={enlaces[1]}></LinksFooter>
 				<div className="text-center text-gray-50 p-2">
 					<h3 className="border-b-2 border-yellow-400 inline-block cursor-default hover:border-b-[3px] transition font-bold">
-						Redes Sociales
+					Social networks
 					</h3>
 
 					<ul className="py-3 flex justify-evenly max-w-[234px] mx-auto  lg:flex-col lg:items-center lg:h-[120px]  ">
 						<li>
 							<Link to={"/facebok"}>
-								<FaFacebook className="hover:scale-105 transition text-lg"/>
+								<FaFacebook className="hover:scale-105 transition text-lg" />
 							</Link>
 						</li>
 						<li>
 							<Link to={"/intagram"}>
-								<FaInstagram className="hover:scale-105 transition text-lg"/>
+								<FaInstagram className="hover:scale-105 transition text-lg" />
 							</Link>
 						</li>
 						<li>
 							<Link to={"/xTwitter"}>
-								<FaXTwitter className="hover:scale-105 transition text-lg"/>
+								<FaXTwitter className="hover:scale-105 transition text-lg" />
 							</Link>
 						</li>
 						<li>
 							<Link to={"/youtube"}>
-								<FaYoutube className="hover:scale-105 transition text-lg"/>
+								<FaYoutube className="hover:scale-105 transition text-lg" />
 							</Link>
 						</li>
 					</ul>

@@ -6,6 +6,7 @@ import Button from "../components/ui/Button";
 import { useAuth } from "../context/AuthContext";
 import { Link, useNavigate } from "react-router-dom";
 import { getProvices, getProvincesByName } from "../api/provinceApi";
+import Alert from "../components/ui/Alert";
 
 function Register() {
 	const navigate = useNavigate();
@@ -21,6 +22,7 @@ function Register() {
 	const [selectedProvinceData, setSelectedProvinceData] = useState(null);
 	const [typeRegister, setTypeRegister] = useState(false);
 	const { signup, isAutheticated, errors: errorsBack } = useAuth();
+	const [alert, setAlert] = useState(false);
 
 	const onSubmit = handleSubmit(async (values) => {
 		try {
@@ -37,10 +39,16 @@ function Register() {
 			});
 			// Pasa el formData como argumento al método signup
 			try {
-				await signup(formData, typeRegister);
-				// Navegar a la página de inicio de sesión después de un registro exitoso
-				if (!errorsBack) return navigate("/");
+				let res = await signup(formData, typeRegister);
+
+
+				if (res?.status === 201) {
+					// Navegar a la página de inicio de sesión después de un registro exitoso
+					alertReview({ message: "succesfull", color: "bg-green-500" });
+					
+				}
 			} catch (error) {
+				alertReview({ message: "error", color: "bg-red-500" });
 				console.error("Error al procesar el formulario:", error);
 			}
 		} catch (error) {
@@ -53,6 +61,21 @@ function Register() {
 	}
 	function taxi() {
 		setTypeRegister(true);
+	}
+
+	function alertReview(data) {
+		console.log(errorsBack);
+		setAlert({ ...data, animation: false });
+
+		const timer = setTimeout(() => {
+			setAlert({ ...data, animation: "animation" });
+
+			const timer = setTimeout(() => {
+				setAlert(false);
+			}, 500);
+			return () => clearTimeout(timer);
+		}, 5000);
+		return () => clearTimeout(timer);
 	}
 
 	useEffect(() => {
@@ -85,7 +108,7 @@ function Register() {
 	}, [selectedProvince]);
 
 	return (
-		<div className="container-form">
+		<div className="container-form mb-2">
 			<div className="flex justify-around items-center">
 				<Button onClick={client}>Client</Button>
 				<h2 className="font-bold cursor-default">OR</h2>
@@ -497,7 +520,6 @@ function Register() {
 								return (
 									<p key={i} className="msg-error mb-1">
 										`{error.path}: {error.message}`
-										
 									</p>
 								);
 							})}
@@ -512,7 +534,7 @@ function Register() {
 					</button>
 				</div>
 			</form>
-			<div className="flex justify-between">
+			<div className=" mx-auto flex justify-between mt-1 lg:justify-evenly">
 				<p>
 					Dont, you have an account{" "}
 					<Link to="/login" className="text-sky-500">
@@ -526,6 +548,16 @@ function Register() {
 						Change password
 					</Link>
 				</p>
+
+				<div>
+					{alert && (
+						<Alert
+							message={alert.message}
+							color={alert.color}
+							animation={alert.animation}
+						/>
+					)}
+				</div>
 			</div>
 		</div>
 	);

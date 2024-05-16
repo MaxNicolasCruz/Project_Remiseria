@@ -48,6 +48,7 @@ export const AuthProvider = ({ children }) => {
 			const res = await registerClientRequest(user);
 			checkLogin();
 			setIsAutheticated(true);
+			return res;
 		} catch (error) {
 			console.log(error.response);
 			setErrors([error.response.data]);

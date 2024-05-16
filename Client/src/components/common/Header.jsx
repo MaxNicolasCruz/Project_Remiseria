@@ -2,9 +2,20 @@ import { Link } from "react-router-dom";
 import Button from "../ui/Button";
 import { logout } from "../../api/auth";
 import { useAuth } from "../../context/AuthContext";
+import { useEffect, useState } from "react";
 
-function Header() {
+function Header({ search }) {
 	const { isAutheticated } = useAuth();
+
+	const [inputValue, setInputValue] = useState("");
+
+	const handleInputChange = (event) => {
+		setInputValue(event.target.value);
+	};
+
+	useEffect(() => {
+		search(inputValue);
+	}, [inputValue, search]);
 
 	function logoutFc() {
 		logout().then((res) => {
@@ -43,6 +54,8 @@ function Header() {
 						name="search"
 						className="rounded mt-1 pl-1 outline-none appearance-none sn-none"
 						placeholder="Search"
+						value={inputValue}
+						onChange={handleInputChange}
 					></input>
 					<svg
 						xmlns="http://www.w3.org/2000/svg"
@@ -60,7 +73,12 @@ function Header() {
 					</svg>
 				</div>
 				<ul className="flex flex-col items-center sm:flex-row sm:justify-center">
-					<li className="font-semibold flex border-gray-700 cursor-pointer sm:mr-2.5 focus:ring-1 focus:ring-slate-400 rounded">
+					<li
+						className="font-semibold flex border-gray-700 cursor-pointer sm:mr-2.5 focus:ring-1 focus:ring-slate-400 rounded "
+						onClick={() => {
+							search("RATING");
+						}}
+					>
 						Rating
 						<svg
 							xmlns="http://www.w3.org/2000/svg"

@@ -5,7 +5,7 @@ import React, { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useChat } from "../context/ChatContext";
 
-function Home() {
+function Home({ search }) {
 	const [slideOn, setSlideOn] = useState(false);
 	const [users, setUsers] = useState([]);
 	const [autheticated, setAutheticated] = useState(null);
@@ -13,23 +13,24 @@ function Home() {
 	const [notification, setNotification] = useState(null);
 	const { isAutheticated, user } = useAuth();
 	const { socket } = useChat(user);
+	const [usersFilter, setUsersFilter] = useState([]);
 
 	function openSlide() {
 		setSlideOn(!slideOn);
 	}
 	useEffect(() => {
-		const getUsers = async () => {
-			try {
-				let res = await getAllServiceRequest();
-
-				setUsers(res.data.data);
-			} catch (error) {
-				console.log(error);
-			}
-		};
 		getUsers();
 	}, []);
 
+	async function getUsers() {
+		try {
+			let res = await getAllServiceRequest();
+
+			setUsers(res.data.data);
+		} catch (error) {
+			console.log(error);
+		}
+	}
 	useEffect(() => {
 		setLoading(true);
 	}, [user]);
@@ -48,6 +49,25 @@ function Home() {
 			socket.off("notification");
 		};
 	}, [socket]);
+
+	function searchUser(string) {
+		let userSearch = users.filter((user) => {
+			let name = `${user.name} ${user.lastName}`;
+
+			return name.toLowerCase().includes(search.toLowerCase());
+		});
+		setUsers(userSearch);
+	}
+	useEffect(() => {
+		if (search.length === 0) return;
+		searchUser(search);
+		if (search === "RATING") {
+			let usersByRating = users
+				.filter((user) => user.rating !== undefined)
+				.sort((a, b) => b.rating - a.rating);
+			setUsers(usersByRating);
+		}
+	}, [search]);
 
 	return (
 		<>
@@ -77,7 +97,7 @@ function Home() {
 							<div
 								className={
 									slideOn
-										? "slideMenu lg:transition-5ms lg:top-[0px] lg:z-10 lg:relative "
+										? "slideMenu lg:transition-5ms lg:top-[0px] lg:z-10 lg:relative lg:h-[410px]"
 										: "slideMenu transition-5ms top-[0px] z-10 relative"
 								}
 							>

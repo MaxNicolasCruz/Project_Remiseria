@@ -37,25 +37,17 @@ export const Comment = sequelize.define('Comment', {
         }
     }
 }, {
-    timestamps: true // Opcional, si deseas registrar createdAt y updatedAt
+    timestamps: false 
 });
 
 // relations
 
-Client.hasMany(Comment, {
-    foreignKey: 'id_client',
-    sourceKey: 'id'
-})
 
 Service.hasMany(Comment, {
     foreignKey: 'id_service',
     targetKey: 'id'
 })
 
-Comment.belongsTo(Client, {
-    foreignKey: 'id_client',
-    sourceKey: 'id'
-})
 
 Comment.belongsTo(Service, {
     foreignKey: 'id_service',
@@ -63,6 +55,12 @@ Comment.belongsTo(Service, {
 })
 
 
-Order.hasOne(Comment)
+Order.hasOne(Comment,{
+    foreignKey: 'id_order',
+    sourceKey: 'id'
+})
 
-Comment.belongsTo(Order)
+Comment.belongsTo(Order,{
+    foreignKey: 'id_order',
+    targetKey: 'id'
+})

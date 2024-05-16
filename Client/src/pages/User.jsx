@@ -9,7 +9,7 @@ import { IoCall, IoChatbubbleEllipsesOutline } from "react-icons/io5";
 import Chat from "../components/ui/Chat";
 import { useAuth } from "../context/AuthContext";
 import Avatar from "@mui/material/Avatar";
-import Alert from "../components/ui/alert";
+import Alert from "../components/ui/Alert";
 import { useChat } from "../context/ChatContext";
 import { differenceInYears } from "date-fns";
 
@@ -64,7 +64,12 @@ function User() {
 		setCalling(true);
 
 		const timer = setTimeout(() => {
-			setCalling(false);
+			setCalling("animation");
+
+			const timer = setTimeout(() => {
+				setCalling(false);
+			}, 500);
+			return () => clearTimeout(timer);
 		}, 5000);
 		return () => clearTimeout(timer);
 	}
@@ -129,7 +134,7 @@ function User() {
 									<p className="text-sm">Orders</p>
 								</div>
 								<div>
-									<h2 className="text-xl ">{user.rating || 0}</h2>
+									<h2 className="text-xl ">{user.rating ? user.rating : 0}</h2>
 									<p className="text-sm">Rating</p>
 								</div>
 								<div>
@@ -230,7 +235,9 @@ function User() {
 							></Chat>
 						</>
 					)}
-					{calling && <Alert message={state} color={status.bg} />}
+					{calling && (
+						<Alert message={state} color={status.bg} animation={calling} />
+					)}
 				</>
 			) : (
 				<p>Loading...</p>

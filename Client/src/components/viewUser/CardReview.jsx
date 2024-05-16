@@ -20,7 +20,7 @@ function CardReview({ user = props }) {
 						<TextField
 							key={index}
 							description={comment.comment}
-							tittle={`${comment.Client.name} ${comment.Client.last_name} `}
+							tittle={`${comment.id_order.Client.name} ${comment.id_order.Client.lastName} `}
 						/>
 					))}
 					{!showMore && user.comments.length > 3 && (

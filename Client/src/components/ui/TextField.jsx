@@ -10,7 +10,8 @@ function TextField({ description, tittle, rating }) {
 			<h2 className="inline-block">{tittle}:</h2>
 			{rating && (
 				<span className="float-right flex items-center">
-					rating<FaStar color="yellow" />
+					{rating}
+					<FaStar color="yellow" />
 				</span>
 			)}
 

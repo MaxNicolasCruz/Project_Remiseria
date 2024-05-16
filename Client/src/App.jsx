@@ -11,16 +11,19 @@ import User from "./pages/User";
 import Chat from "./components/ui/Chat";
 import Chats from "./pages/Chats";
 import Orders from "./pages/Orders";
+import { useState } from "react";
 
 function App() {
+	const [search, setSearch] = useState("");
+
 	return (
 		<AuthProvider>
 			<BrowserRouter>
 				<div className="flex flex-col min-h-screen">
-					<Header />
+					<Header search={(string) => setSearch(string)} />
 					<main className="flex-grow">
 						<Routes>
-							<Route path="/" element={<Home />} />
+							<Route path="/" element={<Home search={search} />} />
 							<Route path="/user/chat" element={<Chat />} />
 							<Route path="/register" element={<Register />} />
 							<Route path="/login" element={<Login />} />

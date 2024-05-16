@@ -3,7 +3,9 @@ import { Client } from "../models/Client.js";
 import { Service } from "../models/Service.js";
 import { Order } from "../models/Order.js";
 import { Chat } from "../models/Chat.js";
-import { Op } from "sequelize";
+import { Op, where } from "sequelize";
+import { Timetable } from "../models/Timetable.js";
+import { Comment } from "../models/Comment.js";
 
 import bcrypt from "bcryptjs";
 
@@ -123,13 +125,12 @@ const userMethod = {
 		);
 		res.status(200).json({ message: "update correct" });
 	},
-	deleteUser: (req, res) => {
-	},
+	deleteUser: (req, res) => {},
 	getUser: async (req, res) => {
 		const userFound = await Client.findOne({
 			where: {
 				id: req.user.id,
-				email: req.user.email, 
+				email: req.user.email,
 			},
 		});
 
@@ -275,6 +276,9 @@ const userMethod = {
 	},
 	getOrder: async (req, res) => {
 		if (!req.user) return res.status(401).json({ message: "User not found" });
+		if (req.user.type === "service")
+			return res.status(401).json({ message: "not access" });
+
 		try {
 			let orders = await Order.findAll({
 				where: {
@@ -295,13 +299,13 @@ const userMethod = {
 
 			for (const order of orders) {
 				let user;
+				// console.log(order);
 				if (order.type_client === "Client") {
-					user = await Service.findOne({
+					user = await Client.findOne({
 						where: {
-							id: order.id_service,
+							id: order.id_client,
 						},
 					});
-
 					if (!user) return res.status(404).json({ message: "User Not Found" });
 
 					user = {
@@ -317,28 +321,96 @@ const userMethod = {
 						numberDocument: user.number_document,
 						image: `http://localhost:3000/uploads/${user.image}`,
 					};
+				} else {
+					user = await Service.findOne({
+						where: {
+							id: order.id_client,
+						},
+						include: [
+							{
+								model: Timetable,
+								as: "timetableUser",
+								attributes: ["id", "timetable"],
+							},
+							{
+								model: Order,
+								attributes: ["id", "date", "method_pay", "status"],
+								include: [
+									{
+										model: Client,
+										attributes: ["name", "last_name"],
+									},
+									{
+										model: Service,
+										attributes: ["name", "last_name"],
+									},
+								],
+							},
+							{
+								model: Comment,
+								attributes: ["id", "comment", "rating"],
+								include: [
+									{
+										model: Client,
+										attributes: ["name", "last_name"],
+									},
+									{
+										model: Service,
+										attributes: ["name", "last_name"],
+									},
+								],
+							},
+						],
+					});
+
+					if (!user) return res.status(404).json({ message: "User Not Found" });
+
+					let rating = user.Comments.reduce((sum, comment) => {
+						return sum + comment.rating;
+					}, 0);
+					user = {
+						id: user.id,
+						email: user.email,
+						name: user.name,
+						lastName: user.last_name,
+						genre: user.genre,
+						dateOfBirth: user.date_of_birth,
+						city: user.city,
+						country: user.country,
+						numberPhone: user.number_phone,
+						image: `http://localhost:3000/uploads/${user.image}`,
+						description: user.description,
+						rating: rating,
+					};
 				}
 
 				order.id_client = user;
+
+				let comment = await Comment.findOne({
+					where: {
+						id_order: order.id,
+					},
+				});
+
 				switch (order.status) {
 					case "Enviada":
-						data.pending.push(order);
+						data.pending.push({ ...order.dataValues, comment });
 						break;
 
 					case "En espera":
-						data.waiting.push(order);
+						data.waiting.push({ ...order.dataValues, comment });
 						break;
 
 					case "Aceptada":
-						data.agreed.push(order);
+						data.agreed.push({ ...order.dataValues, comment });
 						break;
 
 					case "Rechazada":
-						data.rejected.push(order);
+						data.rejected.push({ ...order.dataValues, comment });
 						break;
 
 					case "Realizada":
-						data.done.push(order);
+						data.done.push({ ...order.dataValues, comment });
 						break;
 					default:
 						break;
@@ -355,6 +427,67 @@ const userMethod = {
 		} catch (error) {
 			console.log(error);
 			res.status(500).json({ message: "internal server error" });
+		}
+	},
+	createReview: async (req, res) => {
+		let { comment, rating, order } = req.body;
+
+		if (!(req.user.email === req.body.user.email))
+			return res.status(404).json({ message: "User Not Found" });
+
+		let existingOrder = await Comment.findOne({
+			where: {
+				id_order: order.id,
+			},
+		});
+
+		if (existingOrder)
+			return res
+				.status(409)
+				.json({ message: "You have already made a comment" });
+
+		try {
+			Comment.create({
+				comment: comment,
+				id_client: order.id_client.id,
+				id_service: order.id_service,
+				rating: rating,
+				id_order: order.id,
+			});
+
+			let service = await Service.findByPk(order.id_service);
+
+			if (service.rating == 0) {
+				await Service.update(
+					{
+						rating: rating,
+					},
+					{
+						where: {
+							id: service.id,
+						},
+					}
+				);
+			} else {
+				rating = (service.rating + rating) / 2;
+				await Service.update(
+					{
+						rating: Math.round(rating),
+					},
+					{
+						where: {
+							id: service.id,
+						},
+					}
+				);
+			}
+
+			res.status(200).json({
+				message: "succesfull",
+			});
+		} catch (error) {
+			console.log(error);
+			return res.status(404).json({ message: "User Not Found" });
 		}
 	},
 };

@@ -1,6 +1,12 @@
 import instance from "./axios";
 // Agregar el interceptor de solicitud
 
+let header = {
+	headers: {
+		"Content-Type": "application/json",
+	},
+};
+
 export const registerClientRequest = (user) =>
 	instance.post(`/client/register`, user, {
 		headers: {
@@ -16,11 +22,7 @@ export const registerServiceRequest = (user) =>
 	});
 
 export const updateServiceRequest = (user) => {
-	return instance.patch(`/service/update`, user, {
-		headers: {
-			"Content-Type": "multipart/form-data",
-		},
-	});
+	return instance.patch(`/service/update`, user, {});
 };
 export const updateClientRequest = (user) =>
 	instance.patch(`/client/update`, user, {
@@ -30,24 +32,17 @@ export const updateClientRequest = (user) =>
 	});
 
 export const loginClientRequest = (user) =>
-	instance.post(`/client/login`, user, {
-		headers: {
-			"Content-Type": "application/json",
-		},
-	});
+	instance.post(`/client/login`, user, header);
 
 export const loginServiceRequest = (user) =>
-	instance.post(`/service/login`, user, {
-		headers: {
-			"Content-Type": "application/json",
-		},
-	});
+	instance.post(`/service/login`, user, header);
 
 export const sendOrder = (data) =>
-	instance.post(`/order/sendOrder`, data, {
-		headers: {
-			"Content-Type": "application/json",
-		},
+	instance.post(`/order/sendOrder`, data, header);
+
+export const createReview = (data) =>
+	instance.post(`/client/createReview`, data, {
+		headers: {},
 	});
 
 export const getAllServiceRequest = () => instance.get(`/service/getUsers`);

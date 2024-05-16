@@ -6,7 +6,7 @@ import { useForm } from "react-hook-form";
 import Button from "../components/ui/Button";
 import { getProvices } from "../api/provinceApi";
 import { updateClientRequest, updateServiceRequest } from "../api/auth";
-import Alert from "../components/ui/alert";
+import Alert from "../components/ui/Alert";
 import { RiLoader2Fill } from "react-icons/ri";
 import Avatar from "@mui/material/Avatar";
 
@@ -77,11 +77,8 @@ function Profile() {
 	useEffect(() => {
 		async function getProvicesAll() {
 			try {
-				// Puedes esperar aquí
-
 				let res = await getProvices();
 				setProvinces(res.data.provincias);
-				// Actualizar el estado con los datos obtenidos
 			} catch (error) {
 				console.error("Error al obtener datos:", error);
 			}
@@ -91,17 +88,12 @@ function Profile() {
 		timeLoad();
 	}, []);
 
-	// console.log(watch());
 	const onSubmit = handleSubmit(async (data) => {
-		// Aquí puedes realizar alguna lógica de validación si es necesario
-
 		const { genre, password, dateOfBirth, numberDocument, email, ...postData } =
 			data;
 
-		// Crea un nuevo objeto FormData
 		const formData = new FormData();
 
-		///Agrega todos los campos del formulario al formData
 		Object.keys(postData).forEach((key) => {
 			if (key === "image") {
 				if (postData[key] && postData[key].length === 1) {
@@ -114,8 +106,6 @@ function Profile() {
 			}
 		});
 
-		// Después de realizar las operaciones, puedes desactivar el modo de edición
-		console.log("ready for send back");
 		try {
 			if (typeAccount) {
 				let res = await updateServiceRequest(formData);
@@ -155,16 +145,16 @@ function Profile() {
 								<Avatar
 									alt="Image User"
 									src={user.image}
-									sx={{ width: 156, height: 156 }}
+									sx={{ width: 126, height: 126 }}
 									className="m-auto"
 								/>
 							</div>
 							<div>
 								<form
-									className="sm:grid grid-cols-2 pl-[5%] sm:pl-0 place-items-center text-center sm:text-xl"
+									className="sm:grid grid-cols-2  sm:pl-0 place-items-center text-center sm:text-xl"
 									onSubmit={onSubmit}
 								>
-									<div className="scale-75 relative max-w-[200px] sm:max-w-[50%] w-[78%]">
+									<div className=" relative max-w-[200px] sm:max-w-[50%] w-2/3 text-sm mx-auto">
 										<Label htmlFor="name">Name</Label>
 										<Input
 											type="text"
@@ -188,7 +178,7 @@ function Profile() {
 											<span className="msg-error">{errors.name.message}</span>
 										)}
 									</div>
-									<div className="scale-75 relative max-w-[200px] sm:max-w-[50%] w-[78%]">
+									<div className="relative max-w-[200px] sm:max-w-[50%] w-2/3 text-sm mx-auto">
 										<Label htmlFor="lastName">Last Name</Label>
 										<Input
 											type="text"
@@ -214,7 +204,7 @@ function Profile() {
 										)}
 									</div>
 
-									<div className="scale-75 relative max-w-[200px] sm:max-w-[50%] w-[78%]">
+									<div className="relative max-w-[200px] sm:max-w-[50%] w-2/3 text-sm mx-auto">
 										<Label htmlFor="genre">Genre</Label>
 
 										<Input
@@ -231,7 +221,7 @@ function Profile() {
 											viewBox="0 0 24 24"
 											strokeWidth={1.5}
 											stroke="currentColor"
-											className="w-6 h-6 absolute top-[27px] -left-[24px] sm:top-[10px] sm:left-10 "
+											className="w-6 h-6 absolute top-[19px] -left-[24px] sm:top-[29px] sm:left-30 lg:left-[40px] lg:top-[5px] "
 										>
 											<path
 												strokeLinecap="round"
@@ -240,7 +230,7 @@ function Profile() {
 											/>
 										</svg>
 									</div>
-									<div className="scale-75 relative max-w-[200px] sm:max-w-[50%] w-[78%]">
+									<div className="relative max-w-[200px] sm:max-w-[50%] w-2/3 text-sm mx-auto">
 										<Label htmlFor="dateOfBirth">Date of Birth</Label>
 										<input
 											type="date"
@@ -248,7 +238,7 @@ function Profile() {
 											id="dateOfBirth"
 											readOnly
 											value={user.dateOfBirth}
-											className="text-black rounded outline-none w-[189px] "
+											className="text-black rounded outline-none w-full"
 											disabled
 										/>
 										<svg
@@ -257,7 +247,7 @@ function Profile() {
 											viewBox="0 0 24 24"
 											strokeWidth={1.5}
 											stroke="currentColor"
-											className="w-6 h-6 absolute top-[27px] -left-[24px] sm:top-[10px] sm:left-4"
+											className="w-6 h-6 absolute top-[19px] -left-[24px] sm:top-[29px] sm:left-30 lg:left-[20px] lg:top-[5px]"
 										>
 											<path
 												strokeLinecap="round"
@@ -267,7 +257,7 @@ function Profile() {
 										</svg>
 									</div>
 									{provinces && (
-										<div className="scale-75 relative max-w-[200px] sm:max-w-[50%] w-[78%]">
+										<div className="relative max-w-[200px] sm:max-w-[50%] w-2/3 text-sm mx-auto">
 											<Label htmlFor="city">City</Label>
 											<select
 												name="city"
@@ -298,7 +288,7 @@ function Profile() {
 											)}
 										</div>
 									)}
-									<div className="scale-75 relative max-w-[200px] sm:max-w-[50%] w-[78%]">
+									<div className="relative max-w-[200px] sm:max-w-[50%] w-2/3 text-sm mx-auto">
 										<Label htmlFor="country">Country</Label>
 										<Input
 											type="text"
@@ -316,7 +306,7 @@ function Profile() {
 											</span>
 										)}
 									</div>
-									<div className="scale-75 relative max-w-[200px] sm:max-w-[50%] w-[78%]">
+									<div className="relative max-w-[200px] sm:max-w-[50%] w-2/3 text-sm mx-auto">
 										<Label htmlFor="numberPhone">Number of Phone</Label>
 										<Input
 											type="number"
@@ -341,7 +331,7 @@ function Profile() {
 											</span>
 										)}
 									</div>
-									<div className="scale-75 relative max-w-[200px] sm:max-w-[50%] w-[78%]">
+									<div className="relative max-w-[200px] sm:max-w-[50%] w-2/3 text-sm mx-auto">
 										<Label htmlFor="numberDocument">Number of Document</Label>
 										<Input
 											type="number"
@@ -358,7 +348,7 @@ function Profile() {
 											viewBox="0 0 24 24"
 											strokeWidth={1.5}
 											stroke="currentColor"
-											className="w-6 h-6 absolute top-[50px] -left-[24px] sm:top-[68px] sm:-left-[20px]"
+											className="w-6 h-6 absolute top-[40px] -left-[24px] sm:top-[26px] sm:left-30 lg:-left-[5px] lg:top-[5px]"
 										>
 											<path
 												strokeLinecap="round"
@@ -367,7 +357,7 @@ function Profile() {
 											/>
 										</svg>
 									</div>
-									<div className="relative mt-2 grid place-items-center scale-75 mr-[22%] sm:mr-0">
+									<div className="relative mt-2 grid place-items-center sm:mr-0">
 										<h2>Image For User</h2>
 										<div className="relative">
 											<svg
@@ -423,13 +413,13 @@ function Profile() {
 											<span className="msg-error">{errors.image.message}</span>
 										)}
 									</div>
-									<div className="scale-75 relative max-w-[200px] sm:max-w-[50%] w-[78%]">
+									<div className="relative max-w-[200px] sm:max-w-[50%] w-2/3 text-sm mx-auto">
 										<Label htmlFor="description">Description</Label>
 										<textarea
 											placeholder={user.description}
 											name="description"
 											id="description"
-											className="placeholder:pb-20 text-black outline-none rounded pl-1 pr-1"
+											className="placeholder:pb-20 text-black outline-none rounded pl-1 pr-1 w-full"
 											{...(!isEditing
 												? {
 														value: user.description,
@@ -450,14 +440,14 @@ function Profile() {
 									</div>
 									{typeAccount && (
 										<>
-											<div className="scale-75 relative max-w-[200px] sm:max-w-[50%] w-[78%]">
+											<div className="relative max-w-[200px] sm:max-w-[50%] w-2/3 text-sm mx-auto">
 												<Label htmlFor="vehicleType">Type Vehicle</Label>
 												<Input
 													type="text"
 													placeholder="Vehicle"
 													name="vehicleType"
 													id="vehicleType"
-													className="placeholder:pb-20 text-black outline-none rounded pl-1 pr-1"
+													className="placeholder:pb-20 text-black outline-none rounded pl-1 pr-1 w-full"
 													{...(!isEditing
 														? {
 																value: user.vehicleType,
@@ -482,7 +472,7 @@ function Profile() {
 													</span>
 												)}
 											</div>
-											<div className="scale-75 relative max-w-[200px] sm:max-w-[50%] w-[78%]">
+											<div className="relative max-w-[200px] sm:max-w-[50%] w-2/3 text-sm mx-auto">
 												<Label htmlFor="workingHours">Working Hours</Label>
 												<select
 													name="workingHours"
@@ -504,7 +494,7 @@ function Profile() {
 													</span>
 												)}
 											</div>
-											<div className="scale-75 relative max-w-[200px] sm:max-w-[50%] w-[78%]">
+											<div className="relative max-w-[200px] sm:max-w-[50%] w-2/3 text-sm mx-auto">
 												<Label htmlFor="methodOfPayment">Method of Pay</Label>
 												<select
 													name="methodOfPayment"
@@ -528,7 +518,7 @@ function Profile() {
 													</span>
 												)}
 											</div>
-											<div className="scale-75 relative max-w-[200px] sm:max-w-[50%] w-[78%]">
+											<div className="relative max-w-[200px] sm:max-w-[50%] w-2/3 text-sm mx-auto">
 												<Label htmlFor="state">State</Label>
 												<select
 													name="state"
@@ -553,7 +543,7 @@ function Profile() {
 											</div>
 										</>
 									)}
-									<div className="scale-75 relative max-w-[200px] sm:max-w-[50%] w-[78%]">
+									<div className="relative max-w-[200px] sm:max-w-[50%] w-2/3 text-sm mx-auto">
 										<Label htmlFor="email">Email</Label>
 										<Input
 											type="email"
@@ -570,7 +560,7 @@ function Profile() {
 											viewBox="0 0 24 24"
 											strokeWidth={1.5}
 											stroke="currentColor"
-											className="w-6 h-6 absolute top-[27px] -left-[24px] sm:top-[10px] sm:left-10"
+											className="w-6 h-6 absolute top-[19px] -left-[24px] sm:top-[28px] sm:left-30 lg:left-[40px] lg:top-[5px]"
 										>
 											<path
 												strokeLinecap="round"
@@ -582,7 +572,7 @@ function Profile() {
 											<span className="msg-error">{errors.email.message}</span>
 										)}
 									</div>
-									<div className="scale-75 relative max-w-[200px] sm:max-w-[50%] w-[78%]">
+									<div className="relative max-w-[200px] sm:max-w-[50%] w-2/3 text-sm mx-auto">
 										<Label htmlFor="password">Password</Label>
 										<Input
 											type="password"
@@ -598,7 +588,7 @@ function Profile() {
 											viewBox="0 0 24 24"
 											strokeWidth={1.5}
 											stroke="currentColor"
-											className="w-6 h-6 absolute top-[27px] -left-[24px] sm:top-[10px] sm:left-8"
+											className="w-6 h-6 absolute top-[19px] -left-[24px] sm:top-[27px] sm:left-30 lg:left-[30px] lg:top-[5px]"
 										>
 											<path
 												strokeLinecap="round"

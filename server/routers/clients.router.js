@@ -28,5 +28,6 @@ router.get("/profile", authRequired, userMethod.getUser);
 router.get("/getUsers", userMethod.getAllUser);
 router.get("/getChats", authRequired, userMethod.getAllChats);
 router.get("/getOrder", authRequired, userMethod.getOrder);
+router.post("/createReview", authRequired, userMethod.createReview);
 
 export default router;

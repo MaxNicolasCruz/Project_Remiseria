@@ -228,12 +228,15 @@ const userMethod = {
 				},
 				{
 					model: Order,
-					attributes: ["id", "date", "method_pay", "status"],
+					attributes: [
+						"id",
+						"date",
+						"method_pay",
+						"status",
+						"id_client",
+						"type_client",
+					],
 					include: [
-						{
-							model: Client,
-							attributes: ["name", "last_name"],
-						},
 						{
 							model: Service,
 							attributes: ["name", "last_name"],
@@ -242,12 +245,8 @@ const userMethod = {
 				},
 				{
 					model: Comment,
-					attributes: ["id", "comment", "rating"],
+					attributes: ["id", "comment", "rating", "id_order"],
 					include: [
-						{
-							model: Client,
-							attributes: ["name", "last_name"],
-						},
 						{
 							model: Service,
 							attributes: ["name", "last_name"],
@@ -262,6 +261,54 @@ const userMethod = {
 		let rating = serviceFound.Comments.reduce((sum, comment) => {
 			return sum + comment.rating;
 		}, 0);
+
+		let orders;
+
+		await Promise.all(
+			serviceFound.Orders.map(async (order, index) => {
+				let client;
+				if (order.type_client === "Service") {
+					client = await Service.findByPk(order.id_client);
+				} else {
+					client = await Client.findByPk(order.id_client);
+				}
+				serviceFound.Orders[index].id_client = {
+					id: client.id,
+					email: client.email,
+					name: client.name,
+					lastName: client.last_name,
+					genre: client.genre,
+					dateOfBirth: client.date_of_birth,
+					city: client.city,
+					country: client.country,
+					numberPhone: client.number_phone,
+					numberDocument: client.number_document,
+					image: `http://localhost:3000/uploads/${client.image}`,
+				};
+			})
+		);
+
+		await Promise.all(
+			serviceFound.Comments.map(async (comment, index) => {
+				let order;
+				let client;
+				order = await Order.findByPk(comment.id_order);
+
+				if (order.type_client === "Service") {
+					client = await Service.findByPk(order.id_client);
+				} else {
+					client = await Client.findByPk(order.id_client);
+				}
+
+				serviceFound.Comments[index].id_order = {
+					...order.dataValues,
+					Client: {
+						name: client.name,
+						lastName: client.last_name,
+					},
+				};
+			})
+		);
 
 		let formattedUser = {
 			id: serviceFound.id,
@@ -336,7 +383,7 @@ const userMethod = {
 			methodOfPayment: user.methodUser ? user.methodUser.method : null,
 			orders: user.orders,
 			rating: user.rating,
-			state: user.stateUser ? user.stateUser.status : null,
+			state: user.state,
 			description: user.description,
 		}));
 
@@ -345,7 +392,7 @@ const userMethod = {
 			metadata: {
 				totalCount: formattedUsers.length,
 				timestamp: new Date(),
-				url: `http://localhost:3000/api/service/user/${formattedUsers.id}`,
+				url: `http://localhost:3000/api/service/getUsers`,
 			},
 		});
 	},
@@ -434,6 +481,10 @@ const userMethod = {
 	},
 	getOrder: async (req, res) => {
 		if (!req.user) return res.status(401).json({ message: "User not found" });
+
+		if (req.user.type === "client")
+			return res.status(401).json({ message: "not access" });
+
 		try {
 			let orders = await Order.findAll({
 				where: {
@@ -442,6 +493,21 @@ const userMethod = {
 						{ id_service: req.user.id },
 					],
 				},
+				include: [
+					{
+						model: Service,
+						as: "Service",
+						attributes: [
+							"id",
+							"name",
+							"last_name",
+							"genre",
+							"date_of_birth",
+							"city",
+							"image",
+						],
+					},
+				],
 				order: [["date", "DESC"]],
 			});
 
@@ -484,10 +550,6 @@ const userMethod = {
 								attributes: ["id", "comment", "rating"],
 								include: [
 									{
-										model: Client,
-										attributes: ["name", "last_name"],
-									},
-									{
 										model: Service,
 										attributes: ["name", "last_name"],
 									},
@@ -497,10 +559,6 @@ const userMethod = {
 					});
 
 					if (!user) return res.status(404).json({ message: "User Not Found" });
-
-					let rating = user.Comments.reduce((sum, comment) => {
-						return sum + comment.rating;
-					}, 0);
 					user = {
 						id: user.id,
 						email: user.email,
@@ -513,7 +571,7 @@ const userMethod = {
 						numberPhone: user.number_phone,
 						image: `http://localhost:3000/uploads/${user.image}`,
 						description: user.description,
-						rating: rating
+						rating: user.rating,
 					};
 				} else {
 					user = await Client.findByPk(order.id_client);
@@ -522,9 +580,9 @@ const userMethod = {
 						id: user.id,
 						email: user.email,
 						name: user.name,
-						lastName: user.last_name,
+						last_name: user.last_name,
 						genre: user.genre,
-						dateOfBirth: user.date_of_birth,
+						date_of_birth: user.date_of_birth,
 						city: user.city,
 						country: user.country,
 						numberPhone: user.number_phone,
@@ -534,22 +592,29 @@ const userMethod = {
 				}
 
 				order.id_client = user;
+				order.Service.image = `http://localhost:3000/uploads/${order.Service.image}`;
+
+				let comment = await Comment.findOne({
+					where: {
+						id_order: order.id,
+					},
+				});
 
 				switch (order.status) {
 					case "Enviada":
-						data.pending.push(order);
+						data.pending.push({ ...order.dataValues, comment });
 						break;
 					case "En espera":
-						data.waiting.push(order);
+						data.waiting.push({ ...order.dataValues, comment });
 						break;
 					case "Aceptada":
-						data.agreed.push(order);
+						data.agreed.push({ ...order.dataValues, comment });
 						break;
 					case "Rechazada":
-						data.rejected.push(order);
+						data.rejected.push({ ...order.dataValues, comment });
 						break;
 					case "Realizada":
-						data.done.push(order);
+						data.done.push({ ...order.dataValues, comment });
 						break;
 					default:
 						break;
